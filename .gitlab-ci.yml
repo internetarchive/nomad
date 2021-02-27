@@ -28,7 +28,7 @@ include:
 build:
   stage: build
   before_script:
-    - export |sort
+    - export |egrep 'NOMAD_SECRET|THIRTY'
     - |
       AUTO_DEVOPS_BUILD_IMAGE_EXTRA_ARGS=""
       for k in $(env |grep NOMAD_SECRET_ |cut -f1 -d=); do
@@ -55,7 +55,6 @@ deploy:
   extends: .nomad-vars
   stage: deploy
   script:
-    - export |sort
     - echo using nomad cluster $NOMAD_ADDR
     - echo deploying to https://$NOMAD_VAR_HOSTNAME
 
