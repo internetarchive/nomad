@@ -30,11 +30,11 @@ build:
     - env
     - |
       AUTO_DEVOPS_BUILD_IMAGE_EXTRA_ARGS=""
-      for k in $(env |grep K8S_SECRET_ |cut -f1 -d=); do
-        AUTO_DEVOPS_BUILD_IMAGE_EXTRA_ARGS="$AUTO_DEVOPS_BUILD_IMAGE_EXTRA_ARGS --build-arg $k=$K8S_SECRET_X"
+      for k in $(env |grep NOMAD_SECRET_ |cut -f1 -d=); do
+        AUTO_DEVOPS_BUILD_IMAGE_EXTRA_ARGS="$AUTO_DEVOPS_BUILD_IMAGE_EXTRA_ARGS --build-arg $k=$NOMAD_SECRET_X"
       done
       export AUTO_DEVOPS_BUILD_IMAGE_EXTRA_ARGS
-    - export AUTO_DEVOPS_BUILD_IMAGE_EXTRA_ARGS="--build-arg K8S_SECRET_X=$K8S_SECRET_X"
+    - export AUTO_DEVOPS_BUILD_IMAGE_EXTRA_ARGS="--build-arg NOMAD_SECRET_X=$NOMAD_SECRET_X"
 
 
 .nomad-vars:
