@@ -162,6 +162,13 @@ wget -qO- 'http://127.0.0.1:8500/v1/catalog/services' |jq .
 ```
 
 ## Optional add-ons to your project
+
+### Secrets
+In your project/repo Settings, set CI/CD environment variables starting with `NOMAD_SECRET_`, marked `Masked` but _not_ `Protected`, eg:
+![Secrets](etc/secrets.jpg)
+and they will show up in your running container as environment variables, named with the lead `NOMAD_SECRET_` removed.  Thus, you can get `DATABASE_URL` (etc.) set in your running container - but not have it anywhere else in your docker image and not printed/shown during CI/CD pipeline phase logging.
+
+
 ### Postgres DB
 Requirements:
 - set environment variables in your project's `.gitlab-ci.yml`:
