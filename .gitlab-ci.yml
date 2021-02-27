@@ -24,6 +24,7 @@ include:
   # @see https://gitlab.com/gitlab-org/cluster-integration/auto-build-image/blob/master/src/build.sh
 
 
+
 build:
   stage: build
   before_script:
