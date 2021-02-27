@@ -28,14 +28,14 @@ include:
 build:
   stage: build
   before_script:
-    - export |egrep 'NOMAD_SECRET|THIRTY'
     - |
       AUTO_DEVOPS_BUILD_IMAGE_EXTRA_ARGS=""
-      for k in $(env |grep NOMAD_SECRET_ |cut -f1 -d=); do
-        AUTO_DEVOPS_BUILD_IMAGE_EXTRA_ARGS="$AUTO_DEVOPS_BUILD_IMAGE_EXTRA_ARGS --build-arg $k=$NOMAD_SECRET_X"
+      for k in $(env |egrep ^NOMAD_SECRET_ |cut -f1 -d=); do
+        v="${!k}"
+        k2=$(echo $k | sed -e s/^NOMAD_SECRET_//)
+        AUTO_DEVOPS_BUILD_IMAGE_EXTRA_ARGS="$AUTO_DEVOPS_BUILD_IMAGE_EXTRA_ARGS --build-arg $k2='$v'"
       done
       export AUTO_DEVOPS_BUILD_IMAGE_EXTRA_ARGS
-    - export AUTO_DEVOPS_BUILD_IMAGE_EXTRA_ARGS="--build-arg NOMAD_SECRET_X=$NOMAD_SECRET_X"
 
 
 .nomad-vars:

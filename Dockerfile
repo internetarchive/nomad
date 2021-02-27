@@ -4,10 +4,6 @@
 
 FROM node:slim
 
-ARG NOMAD_SECRET_X
-ENV NOMAD_SECRET_X ${NOMAD_SECRET_X}
-
-
 # Add nomad
 RUN cd /usr/sbin  &&  \
     node --input-type=module -e " \
