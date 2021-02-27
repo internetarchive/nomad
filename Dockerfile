@@ -4,6 +4,10 @@
 
 FROM node:slim
 
+ARG K8S_SECRET_X
+ENV K8S_SECRET_X ${K8S_SECRET_X}
+
+
 # Add nomad
 RUN cd /usr/sbin  &&  \
     node --input-type=module -e " \

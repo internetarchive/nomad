@@ -24,6 +24,12 @@ include:
   # @see https://gitlab.com/gitlab-org/cluster-integration/auto-build-image/blob/master/src/build.sh
 
 
+build:
+  stage: build
+  before_script:
+    - export AUTO_DEVOPS_BUILD_IMAGE_EXTRA_ARGS="--build-arg K8S_SECRET_X=$K8S_SECRET_X"
+
+
 .nomad-vars:
   before_script:
     # make nice hostname, eg:
