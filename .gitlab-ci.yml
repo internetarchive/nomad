@@ -47,12 +47,15 @@ include:
         fi
 
         # some archive.org specific production deployment detection & var updates first
-        PRODIA=
+        PROD_IA=
         if [ "$CI_COMMIT_REF_SLUG" = "production" ]  &&  [[ "$NOMAD_ADDR" == "*.archive.org" ]]; then
-          PRODIA=1
+          PROD_IA=1
         fi
 
-        if [ $PRODIA ]; then
+        echo PROD_OR_MAIN=${PROD_OR_MAIN}xxx
+        echo PROD_IA=${PROD_IA}xxx
+
+        if [ $PROD_IA ]; then
           export NOMAD_ADDR=https://nomad.ux.archive.org
           if [ "$NOMAD_VAR_COUNT" = "" ]; then
             export NOMAD_VAR_COUNT=3
@@ -61,7 +64,7 @@ include:
 
         if [ "$NOMAD_VAR_HOSTNAMES" != ""  -a  $PROD_OR_MAIN ]; then
           USE_FIRST_CUSTOM_HOSTNAME=1
-        elif [ $PRODIA ]; then
+        elif [ $PROD_IA ]; then
           export HOSTNAME="${CI_PROJECT_PATH_SLUG}.prod.archive.org"
         else
           export NOMAD_VAR_HOSTNAMES='["'$HOSTNAME'"]'
