@@ -37,21 +37,45 @@ include:
     # however, if repo has list of 1+ custom hostnames it wants to use instead for main/master branch
     # review app, then use them and log during [deploy] phase the first hostname in the list
     - export HOSTNAME="${NOMAD_VAR_SLUG}.${KUBE_INGRESS_BASE_DOMAIN}"
-    # xxx: DRY this up below -- 3 identical "export HOSTNAME=..." etc...
     - |
+      USE_FIRST_CUSTOM_HOSTNAME=
       if [ "$NOMAD_VAR_PRODUCTION_BRANCH" = "" ]; then
-        if [ "$NOMAD_VAR_HOSTNAMES" != ""  -a  "$CI_COMMIT_REF_SLUG" = "main" ]; then
-          export HOSTNAME=$(echo "$NOMAD_VAR_HOSTNAMES" |cut -f1 -d, |tr -d '[]" ' |tr -d "'")
-        elif [ "$NOMAD_VAR_HOSTNAMES" != ""  -a  "$CI_COMMIT_REF_SLUG" = "master" ]; then
-          export HOSTNAME=$(echo "$NOMAD_VAR_HOSTNAMES" |cut -f1 -d, |tr -d '[]" ' |tr -d "'")
+
+        PROD_OR_MAIN=
+        if [ "$CI_COMMIT_REF_SLUG" = "production" -o "$CI_COMMIT_REF_SLUG" = "main" -o "$CI_COMMIT_REF_SLUG" = "master" ]; then
+          PROD_OR_MAIN=1
+        fi
+
+        # some archive.org specific production deployment detection & var updates first
+        PRODIA=
+        if [ "$CI_COMMIT_REF_SLUG" = "production" ]  &&  [[ "$NOMAD_ADDR" == "*.archive.org" ]]; then
+          PRODIA=1
+        fi
+
+        if [ $PRODIA ]; then
+          export NOMAD_ADDR=https://nomad.ux.archive.org
+          if [ "$NOMAD_VAR_COUNT" = "" ]; then
+            export NOMAD_VAR_COUNT=3
+          fi
+        fi
+
+        if [ "$NOMAD_VAR_HOSTNAMES" != ""  -a  $PROD_OR_MAIN ]; then
+          USE_FIRST_CUSTOM_HOSTNAME=1
+        elif [ $PRODIA ]; then
+          export HOSTNAME="${CI_PROJECT_PATH_SLUG}.prod.archive.org"
         else
           export NOMAD_VAR_HOSTNAMES='["'$HOSTNAME'"]'
         fi
       else
         if [ "$NOMAD_VAR_HOSTNAMES" != ""  -a  "$CI_COMMIT_REF_SLUG" = "$NOMAD_VAR_PRODUCTION_BRANCH" ]; then
-          export HOSTNAME=$(echo "$NOMAD_VAR_HOSTNAMES" |cut -f1 -d, |tr -d '[]" ' |tr -d "'")
+          USE_FIRST_CUSTOM_HOSTNAME=1
         fi
       fi
+
+      if [ $USE_FIRST_CUSTOM_HOSTNAME ]; then
+          export HOSTNAME=$(echo "$NOMAD_VAR_HOSTNAMES" |cut -f1 -d, |tr -d '[]" ' |tr -d "'")
+      fi
+
 
 
 deploy:
