@@ -48,8 +48,12 @@ include:
 
         # some archive.org specific production deployment detection & var updates first
         PROD_IA=
-        if [ "$CI_COMMIT_REF_SLUG" = "production" ]  &&  [[ "$NOMAD_ADDR" == *.archive.org:* ]]; then
-          PROD_IA=1
+        if [ "$CI_COMMIT_REF_SLUG" = "production" ]; then
+          echo xxx1
+          if [[ "$NOMAD_ADDR" == *.archive.org:* ]]; then
+            PROD_IA=1
+            echo xxx2
+          fi
         fi
 
         echo PROD_OR_MAIN=${PROD_OR_MAIN}xxx
