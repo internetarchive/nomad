@@ -95,6 +95,7 @@ deploy:
     # this fully parameterized nice generic 'house style' project.
     #
     # Create project.hcl - including optional insertions that a repo might elect to inject
+    - echo xxx
     - |
       set -x
       if [ -e project.nomad ]; then
