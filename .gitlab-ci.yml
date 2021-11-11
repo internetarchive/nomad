@@ -23,14 +23,6 @@ include:
   - remote: 'https://gitlab.com/gitlab-org/gitlab-foss/-/raw/master/lib/gitlab/ci/templates/Jobs/Build.gitlab-ci.yml'
   # @see https://gitlab.com/gitlab-org/cluster-integration/auto-build-image/blob/master/src/build.sh
 
-build:
-  stage: build
-  # kill docker-in-docker
-  services:
-  rules:
-    - if: '$CI_REGISTRY == "egistry.gitlab.com"'
-      when: never
-
 
 .nomad-vars:
   before_script:
