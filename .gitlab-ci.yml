@@ -95,9 +95,7 @@ deploy:
     # this fully parameterized nice generic 'house style' project.
     #
     # Create project.hcl - including optional insertions that a repo might elect to inject
-    - echo xxx
     - |
-      set -x
       if [ -e project.nomad ]; then
         cp project.nomad project.hcl
       else
@@ -105,17 +103,16 @@ deploy:
         (
           fgrep -B10000 VARS.NOMAD--INSERTS-HERE project.nomad
           # if this filename doesnt exist in repo, this line noops
-          cat vars.nomad 2>/dev/null
+          cat vars.nomad 2>/dev/null || echo
           fgrep -A10000 VARS.NOMAD--INSERTS-HERE project.nomad
         ) >| /tmp/project.nomad
         (
           fgrep -B10000 JOB.NOMAD--INSERTS-HERE /tmp/project.nomad
           # if this filename doesnt exist in repo, this line noops
-          cat job.nomad 2>/dev/null
+          cat job.nomad 2>/dev/null || echo
           fgrep -A10000 JOB.NOMAD--INSERTS-HERE /tmp/project.nomad
         ) >| project.hcl
       fi
-      set +x
 
     # Do the one current substitution nomad v1.0.3 can't do now (apparently a bug)
     - sed -i "s/NOMAD_VAR_SLUG/$NOMAD_VAR_SLUG/" project.hcl
