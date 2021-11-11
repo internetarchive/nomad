@@ -96,10 +96,11 @@ deploy:
     #
     # Create project.hcl - including optional insertions that a repo might elect to inject
     - |
+      set -x
       if [ -e project.nomad ]; then
         cp project.nomad project.hcl
       else
-        wget -q https://gitlab.com/internetarchive/nomad/-/raw/groups/project.nomad
+        wget -q https://gitlab.com/internetarchive/nomad/-/raw/groups/project.nomad # xxx /groups/
         (
           fgrep -B10000 VARS.NOMAD--INSERTS-HERE project.nomad
           # if this filename doesnt exist in repo, this line noops
@@ -113,6 +114,7 @@ deploy:
           fgrep -A10000 JOB.NOMAD--INSERTS-HERE /tmp/project.nomad
         ) >| project.hcl
       fi
+      set +x
 
     # Do the one current substitution nomad v1.0.3 can't do now (apparently a bug)
     - sed -i "s/NOMAD_VAR_SLUG/$NOMAD_VAR_SLUG/" project.hcl
