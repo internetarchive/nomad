@@ -27,6 +27,10 @@ build:
   stage: build
   # kill docker-in-docker
   services:
+  rules:
+    - if: '$CI_REGISTRY == "egistry.gitlab.com"'
+      when: never
+
 
 .nomad-vars:
   before_script:
