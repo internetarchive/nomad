@@ -23,6 +23,10 @@ include:
   - remote: 'https://gitlab.com/gitlab-org/gitlab-foss/-/raw/master/lib/gitlab/ci/templates/Jobs/Build.gitlab-ci.yml'
   # @see https://gitlab.com/gitlab-org/cluster-integration/auto-build-image/blob/master/src/build.sh
 
+build:
+  stage: build
+  # kill docker-in-docker
+  services:
 
 .nomad-vars:
   before_script:
@@ -92,10 +96,26 @@ deploy:
     - echo deploying to https://$HOSTNAME
 
     # You can have your own/custom `project.nomad` in the top of your repo - or we'll just use
-    # this fully parameterized nice generic 'house style' project
-    - if [ ! -e project.nomad ];then wget -q https://gitlab.com/internetarchive/nomad/-/raw/master/project.nomad; fi
+    # this fully parameterized nice generic 'house style' project.
+    #
+    # Create project.hcl - including optional insertions that a repo might elect to inject
+    - |
+      if [ ! -e project.nomad ]; then
+        wget -q https://gitlab.com/internetarchive/nomad/-/raw/master/project.nomad
+        (
+          fgrep -B10000 VARS.NOMAD--INSERTS-HERE project.nomad
+          # if this filename doesnt exist in repo, this line noops
+          cat vars.nomad 2>/dev/null
+          fgrep -A10000 VARS.NOMAD--INSERTS-HERE project.nomad
+        ) >| /tmp/project.nomad
+        (
+          fgrep -B10000 JOB.NOMAD--INSERTS-HERE /tmp/project.nomad
+          # if this filename doesnt exist in repo, this line noops
+          cat job.nomad 2>/dev/null
+          fgrep -A10000 JOB.NOMAD--INSERTS-HERE /tmp/project.nomad
+        ) >| project.hcl
+      fi
 
-    - cp project.nomad project.hcl
     # Do the one current substitution nomad v1.0.3 can't do now (apparently a bug)
     - sed -i "s/NOMAD_VAR_SLUG/$NOMAD_VAR_SLUG/" project.hcl
     # set NOMAD_SECRETS to JSON encoded key/val hashmap of env vars starting w/ "NOMAD_SECRET_"

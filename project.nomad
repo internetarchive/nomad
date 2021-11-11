@@ -128,6 +128,9 @@ locals {
 }
 
 
+# VARS.NOMAD--INSERTS-HERE
+
+
 # NOTE: for main or master branch: NOMAD_VAR_SLUG === CI_PROJECT_PATH_SLUG
 job "NOMAD_VAR_SLUG" {
   datacenters = ["dc1"]
@@ -205,6 +208,8 @@ job "NOMAD_VAR_SLUG" {
             grace = "${var.HEALTH_TIMEOUT}"
           }
         }
+
+        connect { native = true }
       }
 
       dynamic "service" {
@@ -237,6 +242,7 @@ job "NOMAD_VAR_SLUG" {
           config {
             image = "${var.CI_REGISTRY_IMAGE}/${var.CI_COMMIT_REF_SLUG}:${var.CI_COMMIT_SHA}"
             image_pull_timeout = "20m"
+            network_mode = "local"
 
             auth {
               # GitLab docker login user/pass are pretty unstable.  If admin has set `..R2..` keys in
@@ -367,71 +373,6 @@ job "NOMAD_VAR_SLUG" {
           source    = "${volume.key}"
         }
       }
-
-
-
-      # Optional add-on postgres DB.  @see README.md for more details to enable.
-      dynamic "task" {
-        # task.key == DB port number
-        # task.value == DB name like 'db'
-        for_each = var.PG
-        labels = ["${var.SLUG}-db"]
-        content {
-          driver = "docker"
-
-          config {
-            image = "docker.io/bitnami/postgresql:11.7.0-debian-10-r9"
-          }
-
-          # https://www.nomadproject.io/docs/job-specification/template#environment-variables
-          template {
-            data = <<EOH
-POSTGRESQL_PASSWORD="${var.POSTGRESQL_PASSWORD}"
-EOH
-            destination = "secrets/file.env"
-            env         = true
-          }
-
-          service {
-            name = "${var.SLUG}-db"
-            port = "${task.value}"
-
-            check {
-              expose   = true
-              type     = "tcp"
-              interval = "2s"
-              timeout  = "2s"
-            }
-
-            check {
-              # This posts container's bridge IP address (starting with "172.") into
-              # an expected file that other docker container can reach this
-              # DB docker container with.
-              type     = "script"
-              name     = "setup"
-              command  = "/bin/sh"
-              args     = ["-c", "hostname -i |tee /alloc/data/${var.CI_PROJECT_PATH_SLUG}-db.ip"]
-              interval = "1h"
-              timeout  = "10s"
-            }
-
-            check {
-              type     = "script"
-              name     = "db-ready"
-              command  = "/opt/bitnami/postgresql/bin/pg_isready"
-              args     = ["-Upostgres", "-h", "127.0.0.1", "-p", "${task.key}"]
-              interval = "10s"
-              timeout  = "10s"
-            }
-          } # end service
-
-          volume_mount {
-            volume      = "${element(keys(var.PV_DB), 0)}"
-            destination = "${element(values(var.PV_DB), 0)}"
-            read_only   = false
-          }
-        } # end content
-      } # end dynamic "task"
     }
   } # end dynamic "group"
 
@@ -469,4 +410,6 @@ EOH
       set_contains = "${constraint.value}"
     }
   }
+
+  # JOB.NOMAD--INSERTS-HERE
 } # end job
