@@ -42,6 +42,8 @@ variables {
   # Pass in "ro" or "rw" if you want an NFS /home/ mounted into container, as ReadOnly or ReadWrite
   HOME = ""
 
+  NETWORK_MODE = "local"
+
   # used in conjunction with PG and PV_DB variables (below)
   POSTGRESQL_PASSWORD = ""
 
@@ -242,7 +244,7 @@ job "NOMAD_VAR_SLUG" {
           config {
             image = "${var.CI_REGISTRY_IMAGE}/${var.CI_COMMIT_REF_SLUG}:${var.CI_COMMIT_SHA}"
             image_pull_timeout = "20m"
-            network_mode = "local"
+            network_mode = "${var.NETWORK_MODE}"
 
             auth {
               # GitLab docker login user/pass are pretty unstable.  If admin has set `..R2..` keys in

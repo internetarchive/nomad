@@ -99,7 +99,7 @@ deploy:
       if [ -e project.nomad ]; then
         cp project.nomad project.hcl
       else
-        wget -q https://gitlab.com/internetarchive/nomad/-/raw/groups/project.nomad # xxx /groups/
+        wget -q https://gitlab.com/internetarchive/nomad/-/raw/master/project.nomad
         (
           fgrep -B10000 VARS.NOMAD--INSERTS-HERE project.nomad
           # if this filename doesnt exist in repo, this line noops

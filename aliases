@@ -58,6 +58,18 @@ function nom-ssh() {
 }
 
 
+function nom-sshn() {
+  # simple way to pop in (ssh-like) to a given job with 2+ allocations/containers
+  local N=${1:?"Usage: [container/allocation number, starting with 1]"}
+
+  local ALLOC=$(nomad job status $JOB |egrep '\srun\s' |head -n $N |tail -1 |cut -f1 -d' ')
+  echo "nomad alloc exec -i -t $ALLOC"
+
+  nomad alloc exec -i -t $ALLOC \
+    sh -c '([ -e /bin/zsh ] && zsh) || ([ -e /bin/bash ] && bash)  ||  ([ -e /bin/sh ] && sh)'
+}
+
+
 function nom-cp() {
   # copies a laptop local file into running deploy (avoids full pipeline just to see changes)
 

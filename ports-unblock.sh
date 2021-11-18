@@ -6,6 +6,9 @@
 # (and w/o access control, any user could queue or remove jobs in your cluster, etc.)
 # The lines with `$CLUSTER` here only allows access from other servers inside Internet Archive.
 set -x
+sudo mkdir -p /etc/ferm/input
+sudo mkdir -p /etc/ferm/output
+sudo mkdir -p /etc/ferm/forward
 FI=/etc/ferm/input/nomad.conf
 set +x
 echo '
@@ -73,14 +76,15 @@ saddr $CLUSTER proto tcp dport 8301 ACCEPT;
 # for fabio service discovery
 saddr $CLUSTER proto tcp dport 9998 ACCEPT;
 
+# locator UDP port for archive website
+saddr $CLUSTER proto udp sport 8010 ACCEPT;
 
 # for webapps and such on higher ports
 saddr $CLUSTER proto tcp dport 20000:45000 ACCEPT;
 ' |sudo tee $FI
 
 set -x
-sudo mkdir -p /etc/ferm/output
-sudo mkdir -p /etc/ferm/forward
 sudo cp -p $FI /etc/ferm/output/nomad.conf
 sudo cp -p $FI /etc/ferm/forward/nomad.conf
+
 sudo service ferm reload
