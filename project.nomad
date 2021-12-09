@@ -188,7 +188,7 @@ job "NOMAD_VAR_SLUG" {
         # second line automatically redirects any http traffic to https
         tags = concat([for HOST in var.HOSTNAMES :
           "urlprefix-${HOST}:443/"], [for HOST in var.HOSTNAMES :
-          "urlprefix-${HOST}:80/ redirect=308,https://${HOST}/"])
+          "urlprefix-${HOST}:80/ redirect=308,https://${HOST}$path"])
 
         canary_tags = concat([for HOST in var.HOSTNAMES :
           "urlprefix-canary-${HOST}:443/"], [for HOST in var.HOSTNAMES :
