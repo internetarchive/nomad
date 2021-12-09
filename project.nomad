@@ -192,7 +192,7 @@ job "NOMAD_VAR_SLUG" {
 
         canary_tags = concat([for HOST in var.HOSTNAMES :
           "urlprefix-canary-${HOST}:443/"], [for HOST in var.HOSTNAMES :
-          "urlprefix-canary-${HOST}:80/ redirect=308,https://canary-${HOST}/"])
+          "urlprefix-canary-${HOST}:80/ redirect=308,https://canary-${HOST}/$path"])
 
         port = "http"
         check {
