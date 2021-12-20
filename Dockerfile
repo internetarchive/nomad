@@ -8,7 +8,7 @@ RUN cd /usr/sbin && \
     wget -qO  nomad.zip  https://releases.hashicorp.com/nomad/1.2.3/nomad_1.2.3_linux_amd64.zip && \
     unzip     nomad.zip  && \
     rm        nomad.zip  && \
-    chomd 777 nomad
+    chmod 777 nomad
 
 USER deno
 
