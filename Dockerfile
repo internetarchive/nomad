@@ -1,23 +1,13 @@
-# syntax = docker/dockerfile:1.0-experimental
+# syntax = docker/dockerfile:1.2
 # https://docs.docker.com/develop/develop-images/build_enhancements/#overriding-default-frontends
 
+FROM denoland/deno:alpine
 
-FROM node:slim
-
-# Add nomad
-RUN cd /usr/sbin  &&  \
-    node --input-type=module -e " \
-        import https from 'https'; \
-        import fs from 'fs'; \
-        const URL = 'https://releases.hashicorp.com/nomad/1.1.6/nomad_1.1.6_linux_amd64.zip'; \
-        const DST = 'nomad.zip'; \
-        const request = https.get(URL, (resp) => resp.pipe(fs.createWriteStream(DST)))"  &&  \
-    apt-get -yqq update  &&  \
-    apt-get -yqq --no-install-recommends install unzip ca-certificates wget  &&  \
+# add `nomad`
+RUN cd /usr/sbin && \
+    wget -qO nomad.zip  https://releases.hashicorp.com/nomad/1.2.3/nomad_1.2.3_linux_amd64.zip && \
     unzip    nomad.zip  &&  \
     rm       nomad.zip
 
-
 # NOTE: `nomad` binary needed for other repositories using us for CI/CD - but drop from _our_ webapp.
-# NOTE: switching to `USER node` makes `nomad` binary not work right now - so immediately drop privs.
-CMD rm /usr/sbin/nomad  &&  su node -c 'node --input-type=module -e "import http from \"http\"; http.createServer((req, res) => res.end(\"hai \"+new Date())).listen(5000)"'
+CMD rm /usr/sbin/nomad  &&  su deno -c 'deno eval "import { serve } from \"https://deno.land/std/http/server.ts\"; serve(() => new Response(\"hai\"), { port: 5000 })"'
