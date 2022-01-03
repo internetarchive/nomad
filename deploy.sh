@@ -2,26 +2,33 @@
 
 # xxx stop_review...
 
-export CI_REGISTRY=ghcr.io
+if [ "$GITHUB_ACTIONS" ]; then
+  # Convert from GH env vars to GL-like env vars
+  # eg: GITHUB_REPOSITORY=internetarchive/dyno
 
-# GH Actions will need to setup these vars
-# NOMAD_ADDR
-# NOMAD_TOKEN
-# KUBE_INGRESS_BASE_DOMAIN
-# CI_R2_PASS
+  # eg: ghcr.io  (registry host)
+  export CI_REGISTRY="${REGISTRY?}"
+  # eg: ghcr.io/internetarchive/dyno:main  (registry image)
+  export GITHUB__IMAGE="${REGISTRY?}/${GITHUB_REPOSITORY?}:${GITHUB_REF_NAME?}"
+  # eg: dyno  (project name)
+  export CI_PROJECT_NAME=$(basename "${GITHUB_REPOSITORY?}")
+  # eg: main  (branchname)  xxxd slugme
+  export CI_COMMIT_REF_SLUG="${GITHUB_REF_NAME?}"
+  # eg: internetarchive-dyno  xxxd better slugification
+  export CI_PROJECT_PATH_SLUG=$(echo "${GITHUB_REPOSITORY?}" |tr / -)
 
-# CI_COMMIT_REF_SLUG
-# CI_COMMIT_SHA
-# CI_PROJECT_NAME
-# CI_PROJECT_PATH_SLUG
-# CI_REGISTRY_IMAGE
+  # GH Actions will need to send in these vars xxxd
+  # NOMAD_ADDR
+  # NOMAD_TOKEN
+  # KUBE_INGRESS_BASE_DOMAIN
+  # CI_R2_PASS
 
-# CI_R2_USER
+  # CI_R2_USER
 
-# see if we should do nothing
-if [ "$NOMAD_VAR_NO_DEPLOY" ]; then exit 0; fi
+  # see if we should do nothing
+  if [ "$NOMAD_VAR_NO_DEPLOY" ]; then exit 0; fi
+fi
 
-env; exit 0; # xxx
 
 # below is a direct copy from .gitlab-ci.yml, with any lead `-` chars removed for the YML steps
 
