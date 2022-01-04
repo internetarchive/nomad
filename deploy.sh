@@ -42,7 +42,7 @@ function main() {
       fi
     fi
 
-    if [ "$NOMAD_VAR_HOSTNAMES" != ""  -a  $PROD_OR_MAIN ]; then
+    if [ "$NOMAD_VAR_HOSTNAMES" != ""  -a  "$PROD_OR_MAIN" ]; then
       USE_FIRST_CUSTOM_HOSTNAME=1
     elif [ $PROD_IA ]; then
       export HOSTNAME="${CI_PROJECT_NAME}.prod.archive.org"
