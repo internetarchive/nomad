@@ -253,6 +253,8 @@ job "NOMAD_VAR_SLUG" {
             grace = "${var.HEALTH_TIMEOUT}"
           }
         }
+
+        connect { native = true }
       }
 
       dynamic "service" {
