@@ -112,7 +112,7 @@ function main() {
     cp "$REPODIR/project.nomad" project.hcl
   else
     rm -f project.nomad
-    wget -q https://gitlab.com/internetarchive/nomad/-/raw/master/project.nomad
+    wget -q https://gitlab.com/internetarchive/nomad/-/raw/groups/project.nomad
     (
       fgrep -B10000 VARS.NOMAD--INSERTS-HERE project.nomad
       # if this filename doesnt exist in repo, this line noops
