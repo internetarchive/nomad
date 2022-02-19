@@ -8,7 +8,7 @@
 
 
 # NOTE: very first pipeline, the [build] below will make sure this is created
-image: registry.gitlab.com/internetarchive/nomad/master
+image: registry.gitlab.com/internetarchive/nomad/groups
 
 variables:
   DOCKER_BUILDKIT: 1
