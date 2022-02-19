@@ -180,10 +180,7 @@ locals {
 job "NOMAD_VAR_SLUG" {
   datacenters = ["dc1"]
 
-  dynamic "group" {
-    for_each = local.job_names
-    labels = ["${group.value}"]
-    content {
+  group "NOMAD_VAR_SLUG" {
       count = var.COUNT
 
       update {
@@ -440,7 +437,6 @@ job "NOMAD_VAR_SLUG" {
         }
       }
     }
-  } # end dynamic "group"
 
 
   reschedule {
