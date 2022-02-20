@@ -109,23 +109,23 @@ function main() {
   REPODIR="$(pwd)"
   cd /tmp
   if [ -e "$REPODIR/project.nomad" ]; then
-    cp "$REPODIR/project.nomad" project.hcl
+    cp "$REPODIR/project.nomad" project.nomad
   else
     rm -f project.nomad
     wget -q https://gitlab.com/internetarchive/nomad/-/raw/groups/project.nomad
-    (
-      fgrep -B10000 VARS.NOMAD--INSERTS-HERE project.nomad
-      # if this filename doesnt exist in repo, this line noops
-      cat "$REPODIR/vars.nomad" 2>/dev/null || echo
-      fgrep -A10000 VARS.NOMAD--INSERTS-HERE project.nomad
-    ) >| tmp.nomad
-    (
-      fgrep -B10000 JOB.NOMAD--INSERTS-HERE tmp.nomad
-      # if this filename doesnt exist in repo, this line noops
-      cat "$REPODIR/job.nomad" 2>/dev/null || echo
-      fgrep -A10000 JOB.NOMAD--INSERTS-HERE tmp.nomad
-    ) >| project.hcl
   fi
+  (
+    fgrep -B10000 VARS.NOMAD--INSERTS-HERE project.nomad
+    # if this filename doesnt exist in repo, this line noops
+    cat "$REPODIR/vars.nomad" 2>/dev/null || echo
+    fgrep -A10000 VARS.NOMAD--INSERTS-HERE project.nomad
+  ) >| tmp.nomad
+  (
+    fgrep -B10000 JOB.NOMAD--INSERTS-HERE tmp.nomad
+    # if this filename doesnt exist in repo, this line noops
+    cat "$REPODIR/job.nomad" 2>/dev/null || echo
+    fgrep -A10000 JOB.NOMAD--INSERTS-HERE tmp.nomad
+  ) >| project.hcl
 
 
   # Do the one current substitution nomad v1.0.3 can't do now (apparently a bug)
