@@ -1,4 +1,4 @@
-#!/bin/zsh -e
+#!/bin/zsh -eu
 
 # Looks for review apps for branches for active projects that are "old",
 # and removes them from the nomad cluster.
@@ -6,7 +6,7 @@
 # Tailor these next two variables to what makes sense for you.
 
 JOB_STARTS="ia-petabox-  www-offshoot-"
-JOB_STARTS_NOTS="www-offshoot-ssr"
+JOB_STARTS_NOT="www-offshoot-ssr"
 MAX_DAYS_OLD=28 # 4 weeks
 
 
@@ -29,6 +29,9 @@ for JOB_START in $(echo $JOB_STARTS); do
     echo "$ID\t$YMD => $DAYS"
     [ $DAYS -lt $MAX_DAYS_OLD ] && continue
 
+    echo
     echo "KILL $ID\t$YMD\t$DAYS DAYS OLD"
+    echo
+    nomad stop -purge $ID
   done
 done
