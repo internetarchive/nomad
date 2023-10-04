@@ -45,7 +45,8 @@ If invoking cmd-line has env var:
                                    defaults to: https://archive.org/about/404.html
   NOMAD_ADDR_EXTRA=[HOSTNAME]   -- For 1+ extra, nicer https:// hostname(s) you'd like to use to talk
                                    to nomad, pass in hostname(s) in CSV format for us to setup.
-
+  ON_DEMAND_TLS_ASK=[URL]       -- If you want to use caddy 'on_demand_tls', URL to use to 200/400
+                                   @see https://caddy.community/t/11179
 
   Example:
     NFS_PV=1.1.1.1:/mnt/exports  ./setup.sh  vm1.example.com  vm2.example.com
@@ -69,7 +70,16 @@ function main() {
 
   typeset -a NODES # array type env variable
 
-  if [ "$#" -gt 1 ]; then
+  if [ "$1" = "setup-consul-caddy-misc" ]; then
+    setup-consul-caddy-misc
+
+  elif [ "$1" = "setup-certs" ]; then
+    setup-certs
+
+  elif [ "$1" = "setup-nomad" ]; then
+    setup-nomad
+
+  elif [ "$#" -gt 0 ]; then
     # This is where the script starts
     set -x
 
@@ -94,10 +104,11 @@ function main() {
     TRUSTED_PROXIES=${TRUSTED_PROXIES:="private_ranges"}
     UNKNOWN_SERVICE_404="${UNKNOWN_SERVICE_404:-"https://archive.org/about/404.html"}"
     NOMAD_ADDR_EXTRA="${NOMAD_ADDR_EXTRA:-""}"
+    ON_DEMAND_TLS_ASK="${ON_DEMAND_TLS_ASK:-""}"
 
     LETSENCRYPT_DIR="/var/lib/caddy/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory"
     for NODE in $NODES; do
-      ssh $NODE "echo '
+      ssh $NODE "sudo mkdir -m755 -p /etc/caddy  &&  echo '
 FIRST=$FIRST
 FQDN=$NODE
 COUNT=$COUNT
@@ -107,6 +118,7 @@ LETSENCRYPT_DIR=$LETSENCRYPT_DIR
 TRUSTED_PROXIES=$TRUSTED_PROXIES
 UNKNOWN_SERVICE_404=$UNKNOWN_SERVICE_404
 NOMAD_ADDR_EXTRA=$NOMAD_ADDR_EXTRA
+ON_DEMAND_TLS_ASK=$ON_DEMAND_TLS_ASK
       ' | sudo tee /etc/caddy/env"
     done
 
@@ -127,15 +139,6 @@ NOMAD_ADDR_EXTRA=$NOMAD_ADDR_EXTRA
     done
 
     finish
-
-  elif [ "$1" = "setup-consul-caddy-misc" ]; then
-    setup-consul-caddy-misc
-
-  elif [ "$1" = "setup-certs" ]; then
-    setup-certs
-
-  elif [ "$1" = "setup-nomad" ]; then
-    setup-nomad
 
   else
     usage "$@"
