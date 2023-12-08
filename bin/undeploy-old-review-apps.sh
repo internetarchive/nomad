@@ -19,7 +19,7 @@ for JOB_START in $(echo $JOB_STARTS); do
     # convert submit date to unix timestamp (linux style; else assume macosx)
     TS=$(date --date="$YMD" +"%s" 2>/dev/null ||  date -jf "%Y-%m-%d" "$YMD" +%s)
     let "SECONDS=$NOW-$TS"
-    [ $SECONDS -lt 0 ] && continue
+    if [ $SECONDS -lt 0 ]; then continue; fi
     set +e
     let "DAYS=$SECONDS/86400"
     set -e
@@ -27,7 +27,7 @@ for JOB_START in $(echo $JOB_STARTS); do
     [ $DAYS -gt 365 ] && continue
 
     echo "$ID\t$YMD => $DAYS"
-    [ $DAYS -lt $MAX_DAYS_OLD ] && continue
+    if [ $DAYS -lt $MAX_DAYS_OLD ]; then continue; fi
 
     echo
     echo "KILL $ID\t$YMD\t$DAYS DAYS OLD"
