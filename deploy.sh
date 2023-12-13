@@ -75,12 +75,11 @@ function main() {
     export HOSTNAME="${CI_PROJECT_NAME}${BRANCH_PART}.${BASE_DOMAIN}"
   fi
 
-  # some archive.org specific deployment detection & var updates first
   if [ "$NOMAD_ADDR" = "" ]; then
-    if   [ "$BASE_DOMAIN" =         "archive.org" ]; then export NOMAD_ADDR=https://dev.archive.org
-    elif [ "$BASE_DOMAIN" =     "dev.archive.org" ]; then export NOMAD_ADDR=https://$BASE_DOMAIN
-    elif [ "$BASE_DOMAIN" = "staging.archive.org" ]; then export NOMAD_ADDR=https://$BASE_DOMAIN
-    elif [ "$BASE_DOMAIN" =    "prod.archive.org" ]; then export NOMAD_ADDR=https://$BASE_DOMAIN
+    export NOMAD_ADDR=https://$BASE_DOMAIN
+    if [ "$BASE_DOMAIN" = archive.org ]; then
+      # an archive.org specific adjustment
+      export NOMAD_ADDR=https://dev.archive.org
     fi
   fi
 
