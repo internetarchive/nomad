@@ -214,16 +214,19 @@ function nom-resubmit() {
 
 function d() {
   # show docker running containers and local images
-	[ "$#" = "0" ] && clear -x
-  if [ $(uname) = "Darwin" ]; then
-	  docker ps -a
-	  line
-	  docker images
-  else
-	  sudo docker ps -a
-	  line
-	  sudo docker images
-  fi
+  [ "$#" = "0" ]  &&  clear -x
+
+  local SUDO=
+  [ $(uname) = "Linux" ]  &&  local SUDO=sudo
+
+  $SUDO docker ps -a --format "table {{.ID}}\t{{.Image}}\t{{.Command}}\t{{.Status}}\t{{.Names}}\t{{.State}}" | $SUDO cat >| $HOME/.dockps
+  for i in STATE running restarting created paused removing exited dead; do
+    $SUDO cat $HOME/.dockps |egrep "$i$" |perl -pe 's/'$i'$//'
+  done
+  $SUDO rm -f $HOME/.dockps
+
+  line
+  $SUDO docker images
 }
 
 function nom() {
