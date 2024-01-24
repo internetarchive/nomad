@@ -297,3 +297,12 @@ function nom-tunnel() {
   local HOST=$(echo "$NOMAD_ADDR" | sed 's/:4646\/*$//' |sed 's/^https*:\/\///')
   ssh -fNA -L 8500:localhost:8500 $HOST
 }
+
+
+function web-logs-tail() {
+  # admin script that can more easily "tail -f" the caddy (JSON) web logs
+  (
+    set -x
+    tail -f /var/log/caddy/access.log | jq -r '"\(.request.host)\(.request.uri)\t\t\(.request.headers."User-Agent")"'
+  )
+}
