@@ -310,9 +310,9 @@ job "NOMAD_VAR_SLUG" {
           port = "${service.value}"
           check {
             name     = "alive"
-            type     = "${var.CHECK_PROTOCOL}"
+            type     = "tcp"
             path     = "${var.CHECK_PATH}"
-            port     = "http" # for now at least, only end up checking the main daemon's port
+            port     = "${service.value}"
             interval = "10s"
             timeout  = "${var.CHECK_TIMEOUT}"
           }
