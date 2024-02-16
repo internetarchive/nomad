@@ -280,6 +280,7 @@ function github-setup() {
 
   # see if we should do nothing
   if [ "$NOMAD_VAR_NO_DEPLOY" ]; then exit 0; fi
+  if [ "$NOMAD_TOKEN" = "" -a "$NOMAD_TOKEN_PROD" = "" -a "$NOMAD_TOKEN_STAGING" = "" ]; then exit 0; fi
 }
 
 main "$1"
