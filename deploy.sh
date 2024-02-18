@@ -265,7 +265,6 @@ function github-setup() {
   # eg: internetarchive-dyno  xxxd better slugification
   export CI_PROJECT_PATH_SLUG=$(echo "${GITHUB_REPOSITORY_LC?}" |tr '/.' - |cut -b1-63 | sed 's/[^a-z0-9\-]//g')
 
-  export CI_REGISTRY_READ_TOKEN=${REGISTRY_TOKEN?}
   if [ "$PRIVATE_REPO" = "false" ]; then
     # turn off `docker login`` before pulling registry image, since it seems like the TOKEN expires
     # and makes re-deployment due to containers changing hosts not work.. sometimes? always?
