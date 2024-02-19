@@ -255,6 +255,9 @@ function github-setup() {
 
   # eg: ghcr.io/internetarchive/dyno:main  (registry image)
   export CI_GITHUB_IMAGE="${CI_REGISTRY?}/${GITHUB_REPOSITORY_LC?}:${GITHUB_REF_NAME?}"
+  # since the registry image :part uses a _branch name_ and not a commit id (like gitlab),
+  # we can end up with a stale deploy if we happen to redeploy to the same VM.  so force a pull.
+  export NOMAD_VAR_FORCE_PULL=true
 
   # eg: dyno  (project name)
   export CI_PROJECT_NAME=$(basename "${GITHUB_REPOSITORY_LC?}")
