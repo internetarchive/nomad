@@ -203,10 +203,10 @@ variables:
   NOMAD_VAR_NETWORK_MODE: 'host'
 ```
 
-#### Custom deploy networking
+#### Custom namespacing
 A job can be limited to a specific 'namespace' for purposes of ACL 'gating'.
 In the example below, a cluster admin could create a custom `NOMAD_TOKEN` that only allows the
-bearer to access to jobs part of the namespace `team-titan`.
+bearer to access jobs part of the namespace `team-titan`.
 ```yaml
 variables:
   NOMAD_VAR_NAMESPACE: 'team-titan'
