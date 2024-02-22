@@ -51,6 +51,8 @@ variables {
 
   NETWORK_MODE = "bridge"
 
+  NAMESPACE = "default"
+
   # only used for github repos
   CI_GITHUB_IMAGE = ""
 
@@ -217,6 +219,7 @@ locals {
 # NOTE: for main or master branch: NOMAD_VAR_SLUG === CI_PROJECT_PATH_SLUG
 job "NOMAD_VAR_SLUG" {
   datacenters = ["dc1"]
+  namespace = "${var.NAMESPACE}"
 
   dynamic "group" {
     for_each = [ "${var.SLUG}" ]

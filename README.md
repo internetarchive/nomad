@@ -65,6 +65,7 @@ NOMAD_VAR_HOSTNAMES
 NOMAD_VAR_IS_BATCH
 NOMAD_VAR_MEMORY
 NOMAD_VAR_MULTI_CONTAINER
+NOMAD_VAR_NAMESPACE
 NOMAD_VAR_NETWORK_MODE
 NOMAD_VAR_NO_DEPLOY
 NOMAD_VAR_PERSISTENT_VOLUME
@@ -200,6 +201,15 @@ If your admin allows it, there might be some useful reasons to use VM host netwo
 ```yaml
 variables:
   NOMAD_VAR_NETWORK_MODE: 'host'
+```
+
+#### Custom deploy networking
+A job can be limited to a specific 'namespace' for purposes of ACL 'gating'.
+In the example below, a cluster admin could create a custom `NOMAD_TOKEN` that only allows the
+bearer to access to jobs part of the namespace `team-titan`.
+```yaml
+variables:
+  NOMAD_VAR_NAMESPACE: 'team-titan'
 ```
 
 
