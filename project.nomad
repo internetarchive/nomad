@@ -185,6 +185,8 @@ locals {
 
   legacy2 = local.host0domain == "staging.archive.org" || local.host0domain == "prod.archive.org" || var.HOSTNAMES[0] == "polyfill.archive.org" || var.HOSTNAMES[0] == "esm.archive.org" || var.HOSTNAMES[0] == "purl.archive.org" || var.HOSTNAMES[0] == "popcorn.archive.org" # xxx
 
+  driver = local.host0domain == "dew.archive.org" ? "podman" : "docker"
+
   tags = local.legacy2 ? merge(
     {for portnum, portname in local.ports_extra_https: portname => [
       # If the main deploy hostname is `card.example.com`, and a 2nd port is named `backend`,
@@ -326,7 +328,7 @@ job "NOMAD_VAR_SLUG" {
       }
 
       task "http" {
-        driver = "docker"
+        driver = "${local.driver}"
 
         # UGH - have to copy/paste this next block twice -- first for no docker login needed;
         #       second for docker login needed (job spec will assemble in just one).
@@ -361,7 +363,7 @@ job "NOMAD_VAR_SLUG" {
             memory_hard_limit = "${var.MEMORY * 10}"
 
             auth {
-              server_address = "${var.CI_REGISTRY}"
+              # server_address = "${var.CI_REGISTRY}"
               username = local.docker_user
               password = "${config.value}"
             }
