@@ -122,9 +122,9 @@ variable "HOSTNAMES" {
   default = ["group-project-branch-slug.example.com"]
 }
 
-variable "BIND_MOUNTS" {
-  # Pass in a list of [host VM => container] direct pass through of readonly volumes, eg:
-  #   NOMAD_VAR_BIND_MOUNTS='[{type = "bind", readonly = true, source = "/usr/games", target = "/usr/games"}]'
+variable "VOLUMES" {
+  # Pass in a list of [host VM => container] direct pass through of volumes, eg:
+  #   NOMAD_VAR_VOLUMES='["/usr/games:/usr/games:ro"]'
   type = list(map(string))
   default = []
 }
@@ -169,7 +169,10 @@ locals {
   # string to a KEY=VAL line per CI/CD variable.  If job is not using secrets, set to "".
   kv = join("\n", [for k, v in var.NOMAD_SECRETS : join("", concat([k, "='", v, "'"]))])
 
-  volumes = var.PERSISTENT_VOLUME == "" ? [] : ["/pv/${var.CI_PROJECT_PATH_SLUG}:${var.PERSISTENT_VOLUME}"]
+  volumes = concat(
+    var.VOLUMES,
+    var.PERSISTENT_VOLUME == "" ? [] : ["/pv/${var.CI_PROJECT_PATH_SLUG}:${var.PERSISTENT_VOLUME}"],
+  )
 
   auto_promote = var.COUNT_CANARIES > 0 ? true : false
 
@@ -340,12 +343,13 @@ job "NOMAD_VAR_SLUG" {
             image_pull_timeout = "20m"
             network_mode = "${var.NETWORK_MODE}"
             ports = local.ports_docker
-            mounts = var.BIND_MOUNTS
             volumes = local.volumes
             # The MEMORY var now becomes a **soft limit**
             # We will 10x that for a **hard limit**
-            memory_hard_limit = "${var.MEMORY * 10}"
-
+            memory_reservation = "${var.MEMORY}"
+            args = [
+              "--memory=${var.MEMORY * 10}"
+            ]
             force_pull = var.FORCE_PULL
           }
         }
@@ -356,19 +360,20 @@ job "NOMAD_VAR_SLUG" {
             image_pull_timeout = "20m"
             network_mode = "${var.NETWORK_MODE}"
             ports = local.ports_docker
-            mounts = var.BIND_MOUNTS
             volumes = local.volumes
             # The MEMORY var now becomes a **soft limit**
             # We will 10x that for a **hard limit**
-            memory_hard_limit = "${var.MEMORY * 10}"
+            memory_reservation = "${var.MEMORY}"
+            args = [
+              "--memory=${var.MEMORY * 10}"
+            ]
+            force_pull = var.FORCE_PULL
 
             auth {
               # server_address = "${var.CI_REGISTRY}"
               username = local.docker_user
               password = "${config.value}"
             }
-
-            force_pull = var.FORCE_PULL
           }
         }
 

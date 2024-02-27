@@ -50,7 +50,6 @@ _**Note:** For urls like https://archive.org/services/project -- watch out for r
 ### Customizing
 There are various options that can be used in conjunction with the `project.nomad` and `.gitlab-ci.yml` files, keys:
 ```text
-NOMAD_VAR_BIND_MOUNTS
 NOMAD_VAR_CHECK_PATH
 NOMAD_VAR_CHECK_PROTOCOL
 NOMAD_VAR_CHECK_TIMEOUT
@@ -71,6 +70,7 @@ NOMAD_VAR_NO_DEPLOY
 NOMAD_VAR_PERSISTENT_VOLUME
 NOMAD_VAR_PORTS
 NOMAD_VAR_SERVERLESS
+NOMAD_VAR_VOLUMES
 ```
 - See the top of [project.nomad](project.nomad)
 - Our customizations always prefix with `NOMAD_VAR_`.

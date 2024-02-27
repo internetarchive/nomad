@@ -13,6 +13,11 @@ function main() {
 
   if [ "$GITHUB_ACTIONS" ]; then github-setup; fi
 
+  if [ "$NOMAD_VAR_BIND_MOUNTS" ]; then
+    # xxx temporary stop-gap migration for deprecation NOMAD_VAR_BIND_MOUNTS to new NOMAD_VAR_VOLUMES
+    export NOMAD_VAR_VOLUMES=$(echo "$NOMAD_VAR_BIND_MOUNTS" |grep -oE '"/[^"]+"' |tr -d '"' |sort -u |sed -E 's/^(.*)$/"\1:\1"/' |tr '\n' , |sed 's/,$/]/' |sed 's/^/[/')
+    unset NOMAD_VAR_BIND_MOUNTS
+  fi
 
   ############################### NOMAD VARS SETUP ##############################
 
@@ -154,24 +159,24 @@ function main() {
   verbose "Replacing variables internal to project.nomad."
 
   (
-    fgrep -B10000 VARS.NOMAD--INSERTS-HERE project.nomad
+    grep -F -B10000 VARS.NOMAD--INSERTS-HERE project.nomad
     # if this filename doesnt exist in repo, this line noops
     cat "$REPODIR/vars.nomad" 2>/dev/null || echo
-    fgrep -A10000 VARS.NOMAD--INSERTS-HERE project.nomad
+    grep -F -A10000 VARS.NOMAD--INSERTS-HERE project.nomad
   ) >| tmp.nomad
   cp tmp.nomad project.nomad
   (
-    fgrep -B10000 JOB.NOMAD--INSERTS-HERE project.nomad
+    grep -F -B10000 JOB.NOMAD--INSERTS-HERE project.nomad
     # if this filename doesnt exist in repo, this line noops
     cat "$REPODIR/job.nomad" 2>/dev/null || echo
-    fgrep -A10000 JOB.NOMAD--INSERTS-HERE project.nomad
+    grep -F -A10000 JOB.NOMAD--INSERTS-HERE project.nomad
   ) >| tmp.nomad
   cp tmp.nomad project.nomad
   (
-    fgrep -B10000 GROUP.NOMAD--INSERTS-HERE project.nomad
+    grep -F -B10000 GROUP.NOMAD--INSERTS-HERE project.nomad
     # if this filename doesnt exist in repo, this line noops
     cat "$REPODIR/group.nomad" 2>/dev/null || echo
-    fgrep -A10000 GROUP.NOMAD--INSERTS-HERE project.nomad
+    grep -F -A10000 GROUP.NOMAD--INSERTS-HERE project.nomad
   ) >| tmp.nomad
   cp tmp.nomad project.nomad
 
@@ -220,9 +225,14 @@ EOF
     set -o pipefail
     nomad run    -var-file=env.env -check-index $INDEX project.hcl 2>&1 |tee check.log
     if [ "$?" = "0" ]; then
+      if grep -E 'Status[ ]*=[ ]*failed' check.log; then
+        # for example, unhealthy 5x, unable to roll back, ends up failing
+        exit 1
+      fi
+
       # This particular fail case output doesnt seem to exit non-zero -- so we have to check for it
       #   ==> 2023-03-29T17:21:15Z: Error fetching deployment
-      if ! fgrep 'Error fetching deployment' check.log; then
+      if ! grep -F 'Error fetching deployment' check.log; then
         echo deployed to https://$HOSTNAME
         return
       fi
