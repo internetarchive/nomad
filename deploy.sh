@@ -184,6 +184,11 @@ function main() {
   sed -i "s/NOMAD_VAR_SLUG/$NOMAD_VAR_SLUG/" project.hcl
 
 
+  if [ "$NOMAD_ADDR" = "https://dew.archive.org" ]; then
+    # new HinD cluster(s) use `podman` driver instead of `dodker`
+    sed -i 's/driver\s*=\s*"docker"/driver="podman"/'  project.hcl
+  fi
+
   verbose "Handling NOMAD_SECRETS."
   if [ "$NOMAD_SECRETS" = "" ]; then
     # Set NOMAD_SECRETS to JSON encoded key/val hashmap of env vars starting w/ "NOMAD_SECRET_"
