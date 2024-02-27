@@ -346,10 +346,13 @@ job "NOMAD_VAR_SLUG" {
             volumes = local.volumes
             # The MEMORY var now becomes a **soft limit**
             # We will 10x that for a **hard limit**
+            memory_hard_limit = "${var.MEMORY * 10}"
+            /*
             args = [
               "--memory-reservation=${var.MEMORY}m",
               "--memory=${var.MEMORY * 10}m"
             ]
+            */
             force_pull = var.FORCE_PULL
           }
         }
@@ -363,10 +366,13 @@ job "NOMAD_VAR_SLUG" {
             volumes = local.volumes
             # The MEMORY var now becomes a **soft limit**
             # We will 10x that for a **hard limit**
+            memory_hard_limit = "${var.MEMORY * 10}"
+            /*
             args = [
               "--memory-reservation=${var.MEMORY}m",
               "--memory=${var.MEMORY * 10}m"
             ]
+            */
             force_pull = var.FORCE_PULL
 
             auth {
