@@ -125,7 +125,7 @@ variable "HOSTNAMES" {
 variable "VOLUMES" {
   # Pass in a list of [host VM => container] direct pass through of volumes, eg:
   #   NOMAD_VAR_VOLUMES='["/usr/games:/usr/games:ro"]'
-  type = list(map(string))
+  type = list(string)
   default = []
 }
 
@@ -344,16 +344,8 @@ job "NOMAD_VAR_SLUG" {
             network_mode = "${var.NETWORK_MODE}"
             ports = local.ports_docker
             volumes = local.volumes
-            # The MEMORY var now becomes a **soft limit**
-            # We will 10x that for a **hard limit**
-            memory_hard_limit = "${var.MEMORY * 10}"
-            /*
-            args = [
-              "--memory-reservation=${var.MEMORY}m",
-              "--memory=${var.MEMORY * 10}m"
-            ]
-            */
             force_pull = var.FORCE_PULL
+            # memory_hard_limit = "${var.MEMORY * 10}" # not podman driver compatible
           }
         }
         dynamic "config" {
@@ -364,16 +356,8 @@ job "NOMAD_VAR_SLUG" {
             network_mode = "${var.NETWORK_MODE}"
             ports = local.ports_docker
             volumes = local.volumes
-            # The MEMORY var now becomes a **soft limit**
-            # We will 10x that for a **hard limit**
-            memory_hard_limit = "${var.MEMORY * 10}"
-            /*
-            args = [
-              "--memory-reservation=${var.MEMORY}m",
-              "--memory=${var.MEMORY * 10}m"
-            ]
-            */
             force_pull = var.FORCE_PULL
+            # memory_hard_limit = "${var.MEMORY * 10}" # not podman driver compatible
 
             auth {
               # server_address = "${var.CI_REGISTRY}"
@@ -384,8 +368,11 @@ job "NOMAD_VAR_SLUG" {
         }
 
         resources {
-          memory = "${var.MEMORY}"
+          # The MEMORY var now becomes a **soft limit**
+          # We will 10x that for a **hard limit**
           cpu    = "${var.CPU}"
+          memory = "${var.MEMORY}"
+          memory_max = "${var.MEMORY * 10}"
         }
 
 
