@@ -189,8 +189,8 @@ function main() {
   sed -i "s/NOMAD_VAR_SLUG/$NOMAD_VAR_SLUG/" project.hcl
 
 
-  if [ "$NOMAD_ADDR" = "https://dew.archive.org" ]; then
-    # new HinD cluster(s) use `podman` driver instead of `dodker`
+  if [ "$NOMAD_ADDR" = "https://etc.archive.org" ]; then # xxxxxxxx
+    # new HinD cluster(s) use `podman` driver instead of `docker`
     sed -i 's/driver\s*=\s*"docker"/driver="podman"/'  project.hcl
   fi
 
