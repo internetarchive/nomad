@@ -188,11 +188,11 @@ function main() {
   # Do the one current substitution nomad v1.0.3 can't do now (apparently a bug)
   sed -i "s/NOMAD_VAR_SLUG/$NOMAD_VAR_SLUG/" project.hcl
 
-
-  if [ "$NOMAD_ADDR" = "https://etc.archive.org" ]; then # xxxxxxxx
-    # new HinD cluster(s) use `podman` driver instead of `docker`
-    sed -i 's/driver\s*=\s*"docker"/driver="podman"/'  project.hcl
-  fi
+  case "$NOMAD_ADDR" in
+    https://etc.archive.org|https://work.archive.org|https://hind.archive.org)
+      # new HinD cluster(s) use `podman` driver instead of `docker`
+      sed -i 's/driver\s*=\s*"docker"/driver="podman"/'  project.hcl;; # xxxxxxxx
+  esac
 
   verbose "Handling NOMAD_SECRETS."
   if [ "$NOMAD_SECRETS" = "" ]; then
