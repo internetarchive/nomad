@@ -1,5 +1,4 @@
 Code, setup, and information to:
-- create Nomad clusters
 - setup automatic deployment to Nomad clusters from GitLab's standard CI/CD pipelines
 - interact with, monitor, and customize deployments
 
@@ -16,7 +15,7 @@ This also contains demo "hi world" webapp.
 
 Uses:
 - [nomad](https://www.nomadproject.io) **deployment** (management, scheduling)
-- [consul](https://www.consul.io) **networking** (service mesh, service discovery, envoy, secrets storage & replication)
+- [consul](https://www.consul.io) **networking** (service discovery, healthchecking, secrets storage)
 - [caddy](https://caddyserver.com/) **routing** (load balancing, automatic https)
 
 ![Architecture](img/overview2.drawio.svg)
@@ -24,8 +23,8 @@ Uses:
 
 ## Want to deploy to nomad? 🚀
 - verify project's [Settings] [CI/CD] [Variables] has either Group or Project level settings for:
-  - `NOMAD_ADDR` `https://MY-HOSTNAME:4646`
   - `NOMAD_TOKEN` `MY-TOKEN`
+  - `NOMAD_ADDR` `https://MY-HOSTNAME` or `BASE_DOMAIN` `example.com`
   - (archive.org admins will often have set this already for you at the group-level)
 - simply make your project have this simple `.gitlab-ci.yml` in top-level dir:
 ```yaml
@@ -274,7 +273,7 @@ Setting up your repo to deploy to staging is easy!
 
 
 # Setup a Nomad Cluster
-- https://github.com/internetarchive/hind
+- we use HinD: https://github.com/internetarchive/hind
   - you can customize the install with various environment variables
 
 Other alternatives:
@@ -464,61 +463,6 @@ CMD echo DATABASE_URL=postgres://postgres:${POSTGRESQL_PASSWORD}@${NOMAD_ADDR_db
 - https://github.com/rishidot/Decision-Makers-Guide/blob/master/Decision%20Makers%20Guide%20-%20Nomad%20Vs%20Kubernetes%20-%20Oct%202019.pdf
 - https://medium.com/@trevor00/building-container-platforms-part-one-introduction-4ee2338eb11
 
-# Future considerations?
-- https://github.com/hashicorp/consul-esm  (external service monitoring for Consul)
-- https://github.com/timperrett/hashpi (🍓raspberry PI mini cluster 😊)
-
-# Miscellaneous
-- client IP addresses will be in request header 'X-Forwarded-For' (per `caddy`)
-- get list of `consul` services:
-```
-wget -qO- 'localhost:8500/v1/catalog/services?tags=1' | jq .
-```
-- get `caddy` config:
-```
-wget -qO- localhost:2019/config/ | jq .
-```
-
-
-# Issues / next steps
-- have [deploy] wait for service to be up and marked healthy??
-- `docker push` repeated fails and "running out of memory" deep errors?
-[Try](https://dzone.com/articles/tcp-out-of-memory-consider-tuning-tcp-mem
-):
-```
-sysctl net.core.netdev_max_backlog=30000
-sysctl net.core.rmem_max=134217728
-sysctl net.core.wmem_max=134217728
-
-# to persist across reboots:
-echo '
-net.core.netdev_max_backlog=30000
-net.core.rmem_max=134217728
-net.core.wmem_max=134217728' |sudo tee /etc/sysctl.d/90-tcp-memory.conf
-```
-
-
-## Revisit in future if ever desired again
-```yml
-  # This allows us to more easily partition nodes (if desired) to run normal jobs like this (or not)
-  constraint {
-    attribute = "${meta.kind}"
-    operator = "set_contains"
-    value = "worker"
-  }
-```
-
-
-## Gitlab runner issues
-- *probably* just try `sudo service docker restart`
-- if that still doesnt get the previously registered runner to be able to contact/talk back to the gitlab server, on box where it runs, can try:
-```bash
-sudo docker exec -it $(sudo docker ps |fgrep -m1 gitlab/gitlab-runner |cut -f1 -d' ') bash
-gitlab-runner stop
-gitlab-runner --debug run
-CTC-C
-gitlab-runner start
-```
 
 
 # Multi-node architecture
@@ -544,8 +488,6 @@ gitlab-runner start
 - web sockets ✅
 - auto-embed HSTS in https headers, similar to kubernetes ✅
   - eg: `Strict-Transport-Security: max-age=15724800; includeSubdomains`
-- [workaround via deploy token] _sometimes_ `docker pull` was failing on deploy...
-  - https://docs.gitlab.com/ee/user/project/deploy_tokens/index.html#gitlab-deploy-token
 
 
 # Constraints
