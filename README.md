@@ -275,13 +275,10 @@ Setting up your repo to deploy to staging is easy!
 
 
 # Setup a Nomad Cluster
-- [setup.sh](setup.sh)
-  - you can customize the install with these environment variables:
-    - `NFSHOME=1` - setup some minor config to support a r/w `/home/` and r/o `/home/`
-- [bin/setup-mac.sh](bin/setup-mac.sh)
-  - setup single-node cluster on your mac laptop
+- https://github.com/internetarchive/hind
+  - you can customize the install with various environment variables
 
-Options:
+Other alternatives:
 - have DNS domain you can point to a VM?
   - nomad/consul with $5/mo VM (or on-prem)
     - [[1/2] Setup GitLab, Nomad, Consul & Fabio](https://archive.org/~tracey/slides/devops/2021-03-31)
