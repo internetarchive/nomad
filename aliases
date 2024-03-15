@@ -47,7 +47,7 @@ function nom-ssh() {
   ALLOC=$(nomad job status $JOB |egrep -m1 '\srun\s' |cut -f1 -d' ')
   echo "nomad alloc exec -i -t -task $TASK $ALLOC"
 
-  if [ $# -ge 2 ]; then
+  if [ $# -ge 3 ]; then
     shift
     shift
     nomad alloc exec -i -t -task $TASK $ALLOC "$@"
