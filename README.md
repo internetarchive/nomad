@@ -59,7 +59,6 @@ NOMAD_VAR_COUNT_CANARIES
 NOMAD_VAR_CPU
 NOMAD_VAR_FORCE_PULL
 NOMAD_VAR_HEALTH_TIMEOUT
-NOMAD_VAR_HOME
 NOMAD_VAR_HOSTNAMES
 NOMAD_VAR_IS_BATCH
 NOMAD_VAR_MEMORY
@@ -132,13 +131,13 @@ variables:
 Allow your containers to see NFS `/home/` home directories, readonly.
 ```yaml
 variables:
-  NOMAD_VAR_HOME: 'ro'
+  NOMAD_VAR_VOLUMES: '["/home:/home:ro"]'
 ```
 #### Custom make NFS `/home/` available in running containers, read/write
 Allow your containers to see NFS `/home/` home directories, readable and writable.  Please be highly aware of operational security in your container when using this (eg: switch your `USER` in your `Dockerfile` to another non-`root` user; use "prepared statements" with any DataBase interactions; use [https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP](Content Security Policy) in all your pages to eliminate [https://developer.mozilla.org/en-US/docs/Glossary/Cross-site_scripting](XSS attacks, etc.)
 ```yaml
 variables:
-  NOMAD_VAR_HOME: 'rw'
+  NOMAD_VAR_VOLUMES: '["/home:/home:rw"]'
 ```
 #### Custom hostname for your `main` branch deploy
 Your deploy will get a nice semantic hostname by default, based upon "[slugged](https://en.wikipedia.org/wiki/Clean_URL#Slug)" formula like: https://[GITLAB_GROUP]-[GITLAB_PROJECT_OR_REPO_NAME]-[BRANCH_NAME].  However, you can override this if needed.  This custom hostname will only pertain to a branch named `main` (or `master` [sic])
