@@ -1,10 +1,6 @@
-# Tracey 8/11/2022:
-# This is the stock version from:
+# Tracey 3/2024:
+# This is the adapted & simplified from:
 # https://gitlab.com/gitlab-org/gitlab/-/raw/master/lib/gitlab/ci/templates/Jobs/Build.gitlab-ci.yml
-#
-# with the only change to the `image:` below, since that stopped being `docker pull`-able from
-# our self-hosted gitlab runners, suddenly.  (gitlab.com runners for gitlab.com projects were fine)
-# @see https://gitlab.com/internetarchive/auto-build-image
 
 variables:
   AUTO_BUILD_IMAGE_VERSION: 'v1.14.0'
@@ -15,9 +11,6 @@ build:
   image: registry.gitlab.com/internetarchive/auto-build-image/main:latest
   variables:
     DOCKER_TLS_CERTDIR: ''
-  services:
-    - name: 'docker:20.10.12-dind'
-      command: ['--tls=false', '--host=tcp://0.0.0.0:2375']
   script:
     - |
       if [[ -z "$CI_COMMIT_TAG" ]]; then
@@ -28,8 +21,7 @@ build:
         export CI_APPLICATION_TAG=${CI_APPLICATION_TAG:-$CI_COMMIT_TAG}
       fi
 
-      # INTERNET ARCHIVE CUSTOMIZATION --vvvv
-      # if $CI_RUNNER_DESCRIPTION starts w/ "io", could avoid DinD ^ (but cant conditionalize service)
+
       if [ "$NOMAD_VAR_SERVERLESS" != "" ]; then
         # For IA SERVERLESS CI/CD pipelines, we only want to make (2nd) tag of `:latest` for our
         # built image *after* [test] phase runs successfully (since that's our logical deploy)
@@ -37,7 +29,6 @@ build:
         sed -i 's/docker push .*image_latest.*//' /build/build.sh
         sed -i      's/\-\-tag ..image_latest.//' /build/build.sh
       fi
-      # INTERNET ARCHIVE CUSTOMIZATION --^^^^
 
     - /build/build.sh
   artifacts:
@@ -46,16 +37,4 @@ build:
   rules:
     - if: '$BUILD_DISABLED'
       when: never
-    - if: '$AUTO_DEVOPS_PLATFORM_TARGET == "EC2"'
-      when: never
     - if: '$CI_COMMIT_TAG || $CI_COMMIT_BRANCH'
-
-build_artifact:
-  stage: build
-  script:
-    - printf "To build your project, please create a build_artifact job into your .gitlab-ci.yml file.\nMore information at https://docs.gitlab.com/ee/ci/cloud_deployment\n"
-    - exit 1
-  rules:
-    - if: '$BUILD_DISABLED'
-      when: never
-    - if: '$AUTO_DEVOPS_PLATFORM_TARGET == "EC2"'
