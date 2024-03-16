@@ -46,9 +46,6 @@ variables {
 
   COUNT_CANARIES = 1
 
-  # Pass in "ro" or "rw" if you want an NFS /home/ mounted into container, as ReadOnly or ReadWrite
-  HOME = ""
-
   NETWORK_MODE = "bridge"
 
   NAMESPACE = "default"
@@ -374,23 +371,6 @@ job "NOMAD_VAR_SLUG" {
         }
 
 
-        dynamic "volume_mount" {
-          for_each = setintersection([var.HOME], ["ro"])
-          content {
-            volume      = "home-${volume_mount.key}"
-            destination = "/home"
-            read_only   = true
-          }
-        }
-        dynamic "volume_mount" {
-          for_each = setintersection([var.HOME], ["rw"])
-          content {
-            volume      = "home-${volume_mount.key}"
-            destination = "/home"
-            read_only   = false
-          }
-        }
-
         dynamic "template" {
           # Secrets get stored in consul kv store, with the key [SLUG], when your project has set a
           # CI/CD variable like NOMAD_SECRET_[SOMETHING].
@@ -435,25 +415,6 @@ CI_COMMIT_SHA=${var.CI_COMMIT_SHA}
             hook = "prestart"
             sidecar = false
           }
-        }
-      }
-
-      dynamic "volume" {
-        for_each = setintersection([var.HOME], ["ro"])
-        labels = [ "home-${volume.key}" ]
-        content {
-          type      = "host"
-          source    = "home-${volume.key}"
-          read_only = true
-        }
-      }
-      dynamic "volume" {
-        for_each = setintersection([var.HOME], ["rw"])
-        labels = [ "home-${volume.key}" ]
-        content {
-          type      = "host"
-          source    = "home-${volume.key}"
-          read_only = false
         }
       }
 
