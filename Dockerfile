@@ -1,12 +1,9 @@
-# syntax = docker/dockerfile:1.2
-# https://docs.docker.com/develop/develop-images/build_enhancements/#overriding-default-frontends
-
 FROM denoland/deno:alpine
 
 # add `nomad`
 RUN mkdir -m777 /usr/local/sbin  && \
     cd          /usr/local/sbin  && \
-    wget -qO  nomad.zip  https://releases.hashicorp.com/nomad/1.2.3/nomad_1.2.3_linux_amd64.zip && \
+    wget -qO  nomad.zip  https://releases.hashicorp.com/nomad/1.7.6/nomad_1.7.6_linux_amd64.zip && \
     unzip     nomad.zip  && \
     rm        nomad.zip  && \
     chmod 777 nomad && \
