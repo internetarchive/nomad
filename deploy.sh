@@ -188,16 +188,11 @@ function main() {
   # Do the one current substitution nomad v1.0.3 can't do now (apparently a bug)
   sed -i "s/NOMAD_VAR_SLUG/$NOMAD_VAR_SLUG/" project.hcl
 
-  # xxxxxxxxxx externally managed DNS records need to fail during transition...
-  if [ $NOMAD_VAR_SLUG = www-dweb  -o  $NOMAD_VAR_SLUG = www-dwebcamp2019  -o  $NOMAD_VAR_SLUG = www-dwebcamp2022  -o  $NOMAD_VAR_SLUG = www-dwebcamp2023 ]; then
-    exit 1
-  else
-    case "$NOMAD_ADDR" in
-      https://etc.archive.org|https://work.archive.org|https://hind.archive.org|https://dev.archive.org)
-        # HinD cluster(s) use `podman` driver instead of `docker`
-        sed -i 's/driver\s*=\s*"docker"/driver="podman"/'  project.hcl;; # xxxxxxxx
-    esac
-  fi
+  case "$NOMAD_ADDR" in
+    https://etc.archive.org|https://work.archive.org|https://hind.archive.org|https://dev.archive.org)
+      # HinD cluster(s) use `podman` driver instead of `docker`
+      sed -i 's/driver\s*=\s*"docker"/driver="podman"/'  project.hcl;; # xxx
+  esac
 
   verbose "Handling NOMAD_SECRETS."
   if [ "$NOMAD_SECRETS" = "" ]; then
