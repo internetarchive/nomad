@@ -218,8 +218,9 @@ function d() {
 
   local SUDO=
   [ $(uname) = "Linux" ]  &&  local SUDO=sudo
+  [ ! -e /usr/bin/docker ]  &&  local docker=podman
 
-  $SUDO docker ps -a --format "table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Names}}\t{{.State}}" | $SUDO cat >| $HOME/.dockps
+  $SUDO $docker ps -a --format "table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Names}}\t{{.State}}" | $SUDO cat >| $HOME/.dockps
   chmod 666 $HOME/.dockps
   for i in STATE running restarting created paused removing exited dead; do
     cat $HOME/.dockps |egrep "$i$" |perl -pe 's/'$i'$//'
@@ -227,7 +228,7 @@ function d() {
   rm -f $HOME/.dockps
 
   line
-  $SUDO docker images
+  $SUDO $docker images
 }
 
 function nom() {
