@@ -421,6 +421,20 @@ EOH
 CMD echo DATABASE_URL=postgres://postgres:${POSTGRESQL_PASSWORD}@${NOMAD_ADDR_db}/production >| .env && python ...
 ```
 
+---
+
+## Two `group`s, within same `job`, wanting to talk to each other
+Normally, we strongly suggest all `task`s be together in the same `group`.
+That will ensure all task containers are run on the same VM, and all tasks will get automatically managed and setup `env` vars, eg:
+```ini
+NOMAD_ADDR_backend=211.204.226.244:27344
+NOMAD_ADDR_http=211.204.226.244:23945
+```
+
+However, if for some reason you want to split your tasks into 2+ `group { .. }` stanzas,
+here is how you can get the containers to talk to each other (using `consul` and templating):
+- https://github.com/hashicorp/nomad/issues/5455#issuecomment-482490116
+You'd end up putting your 2nd `group` in a file named `job.nomad` in the top of your repo.
 
 ---
 
