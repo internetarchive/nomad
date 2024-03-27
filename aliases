@@ -131,7 +131,9 @@ function nom-cp() {
     return
   fi
 
-  cat "$FILE" | ( set -x; nomad alloc exec -i -task $TASK "$ALLOC" sh -c "cat >| '$REST'" )
+  # HinD updated nomad clusters w/ latest nomad seem to *not* get the stdin close properly
+  # (and thus hang).  So timeout/kill after 2s :( tracey 2024/3 )
+  cat "$FILE" | ( set -x; nomad alloc exec -i -task $TASK "$ALLOC" sh -c "timeout 2 cat >| '$REST'" )
   echo SUCCESS
 }
 
