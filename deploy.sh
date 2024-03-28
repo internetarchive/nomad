@@ -13,12 +13,6 @@ function main() {
 
   if [ "$GITHUB_ACTIONS" ]; then github-setup; fi
 
-  if [ "$NOMAD_VAR_BIND_MOUNTS" ]; then
-    # xxx temporary stop-gap migration for deprecation NOMAD_VAR_BIND_MOUNTS to new NOMAD_VAR_VOLUMES
-    export NOMAD_VAR_VOLUMES=$(echo "$NOMAD_VAR_BIND_MOUNTS" |grep -oE '"/[^"]+"' |tr -d '"' |sort -u |sed -E 's/^(.*)$/"\1:\1"/' |tr '\n' , |sed 's/,$/]/' |sed 's/^/[/')
-    unset NOMAD_VAR_BIND_MOUNTS
-  fi
-
   ############################### NOMAD VARS SETUP ##############################
 
   # auto-convert from pre-2022 var name
@@ -26,15 +20,32 @@ function main() {
     BASE_DOMAIN="$KUBE_INGRESS_BASE_DOMAIN"
   fi
 
+  MAIN_OR_PROD_OR_STAGING=
+  STAGING=
+  PRODUCTION=
+  if [ "$CI_COMMIT_REF_SLUG" = "main" -o "$CI_COMMIT_REF_SLUG" = "master" ]; then
+    MAIN_OR_PROD_OR_STAGING=1
+  elif [ "$CI_COMMIT_REF_SLUG" = "production" ]; then
+    PRODUCTION=1
+    MAIN_OR_PROD_OR_STAGING=1
+  elif [ "$CI_COMMIT_REF_SLUG" = "staging" ]; then
+    STAGING=1
+    MAIN_OR_PROD_OR_STAGING=1
+  fi
+
+
   # some archive.org specific production/staging deployment detection & var updates first
   if [[ "$BASE_DOMAIN" == *.archive.org ]]; then
-    if [ "$CI_COMMIT_REF_SLUG" = "production" ]; then
+    if [ $PRODUCTION ]; then
       export BASE_DOMAIN=prod.archive.org
-    elif [ "$CI_COMMIT_REF_SLUG" = "staging" ]; then
+      if [[ "$CI_PROJECT_PATH_SLUG" == internetarchive-emularity-* ]]; then
+        export BASE_DOMAIN=ux-b.archive.org
+      fi
+    elif [ $STAGING ]; then
       export BASE_DOMAIN=staging.archive.org
     fi
 
-    if [ "$BASE_DOMAIN" = prod.archive.org ]; then
+    if [ $PRODUCTION ]; then
       if [ "$NOMAD_TOKEN_PROD" != "" ]; then
         export NOMAD_TOKEN="$NOMAD_TOKEN_PROD"
         echo using nomad production token
@@ -42,7 +53,7 @@ function main() {
       if [ "$NOMAD_VAR_COUNT" = "" ]; then
         export NOMAD_VAR_COUNT=3
       fi
-    elif [ "$BASE_DOMAIN" = staging.archive.org ]; then
+    elif [ $STAGING ]; then
       if [ "$NOMAD_TOKEN_STAGING" != "" ]; then
         export NOMAD_TOKEN="$NOMAD_TOKEN_STAGING"
         echo using nomad staging token
@@ -51,12 +62,6 @@ function main() {
   fi
 
   export BASE_DOMAIN
-
-
-  MAIN_OR_PROD_OR_STAGING=
-  if [ "$CI_COMMIT_REF_SLUG" = "main" -o "$CI_COMMIT_REF_SLUG" = "master" -o "$CI_COMMIT_REF_SLUG" = "production" -o "$CI_COMMIT_REF_SLUG" = "staging" ]; then
-    MAIN_OR_PROD_OR_STAGING=1
-  fi
 
 
   # Make a nice "slug" that is like [GROUP]-[PROJECT]-[BRANCH], each component also "slugged",
@@ -93,29 +98,16 @@ function main() {
     export NOMAD_VAR_HOSTNAMES=$(deno eval 'const fqdns = JSON.parse(Deno.env.get("NOMAD_VAR_HOSTNAMES")).map((e) => e.includes(".") ? e : e.concat(".").concat(Deno.env.get("BASE_DOMAIN"))); console.log(fqdns)')
   fi
 
-  USE_FIRST_CUSTOM_HOSTNAME=
-  if [ "$NOMAD_VAR_HOSTNAMES" != "" ]; then
-    [ "$BASE_DOMAIN" = prod.archive.org ]  &&  USE_FIRST_CUSTOM_HOSTNAME=1
-    [ $MAIN_OR_PROD_OR_STAGING ]           &&  USE_FIRST_CUSTOM_HOSTNAME=1
-  fi
+  if [ "$MAIN_OR_PROD_OR_STAGING"  -a  "$NOMAD_VAR_HOSTNAMES" != "" ]; then
+    export HOSTNAME=$(echo "$NOMAD_VAR_HOSTNAMES" |cut -f1 -d, |tr -d '[]" ' |tr -d "'")
+  else
+    NOMAD_VAR_HOSTNAMES=
 
-
-  if [ "$BASE_DOMAIN" = prod.archive.org ]; then
-    if [ ! $USE_FIRST_CUSTOM_HOSTNAME ]; then
+    if [ "$PRODUCTION"  -o  "$STAGING" ]; then
       export HOSTNAME="${CI_PROJECT_NAME}.$BASE_DOMAIN"
     fi
   fi
 
-  if [ "$BASE_DOMAIN" = staging.archive.org ]; then
-    export HOSTNAME="${CI_PROJECT_NAME}.$BASE_DOMAIN"
-  fi
-
-
-  if [ $USE_FIRST_CUSTOM_HOSTNAME ]; then
-    export HOSTNAME=$(echo "$NOMAD_VAR_HOSTNAMES" |cut -f1 -d, |tr -d '[]" ' |tr -d "'")
-  else
-    NOMAD_VAR_HOSTNAMES=
-  fi
 
   if [ "$NOMAD_VAR_HOSTNAMES" = "" ]; then
     export NOMAD_VAR_HOSTNAMES='["'$HOSTNAME'"]'
@@ -220,7 +212,7 @@ EOF
   nomad plan     -var-file=env.env project.hcl 2>&1 |sed 's/\(password[^ \t]*[ \t]*\).*/\1 ... /' |tee plan.log  ||  echo
   export INDEX=$(grep -E -o -- '-check-index [0-9]+' plan.log |tr -dc 0-9)
 
-  # IA dev & prod clusters sometimes fail to fetch deployment :( -- so let's retry 5x
+  # some clusters sometimes fail to fetch deployment :( -- so let's retry 5x
   for RETRIES in $(seq 1 5); do
     set -o pipefail
     nomad run    -var-file=env.env -check-index $INDEX project.hcl 2>&1 |tee check.log
