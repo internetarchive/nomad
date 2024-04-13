@@ -33,6 +33,15 @@ include:
   # - remote: 'https://gitlab.com/gitlab-org/gitlab-foss/-/raw/master/lib/gitlab/ci/templates/Jobs/Build.gitlab-ci.yml'
 
 
+test:
+  stage: test
+  script:
+    - pwd && ls && echo xxx
+    - apk add zsh
+    - env -i zsh -euax test/test.sh
+  rules:
+    - if: '$CI_PROJECT_PATH_SLUG = internetarchive-nomad'
+
 
 deploy:
   stage: deploy

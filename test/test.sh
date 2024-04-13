@@ -11,7 +11,8 @@ function expects() {
   NOMAD_VAR_VERBOSE=1
   NOMAD_TOKEN=test
   LOG=/tmp/nomad-test.log
-  PATH=$PATH:/opt/homebrew/bin
+  # for local testing, find `deno` binary:
+  PATH=$PATH:/opt/homebrew/bin:$HOME/.deno/bin
 
   set -x
   bash -eu ./deploy.sh 2>&1 | tee $LOG
