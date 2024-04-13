@@ -36,8 +36,6 @@ include:
 test:
   stage: test
   script:
-    - pwd && ls && echo xxx
-    - apk add zsh
     - env -i zsh -euax test/test.sh
   rules:
     - if: '$CI_PROJECT_PATH_SLUG == "internetarchive-nomad"'

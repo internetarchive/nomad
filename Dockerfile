@@ -7,7 +7,7 @@ RUN mkdir -m777 /usr/local/sbin  && \
     unzip     nomad.zip  && \
     rm        nomad.zip  && \
     chmod 777 nomad && \
-    apk add bash
+    apk add bash zsh
 
 COPY deploy.sh /
 USER deno
