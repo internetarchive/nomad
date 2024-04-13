@@ -3,7 +3,7 @@
 # Runs various tests.
 
 # Run like this to avoid any env vars "leaking" in to this script:
-#   env -i zsh -euax ./test/run.sh
+#   env -i zsh -euax ./test/test.sh
 
 
 function expects() {
@@ -109,7 +109,17 @@ function expects() {
           'deploying to https://emularity-engine.ux-b.archive.org' \
           'using nomad production token'
 )
-
+(
+  echo GL repo using 'main' branch to be like 'production'
+  BASE_DOMAIN=prod.archive.org
+  CI_PROJECT_NAME=offshoot
+  CI_COMMIT_REF_SLUG=main
+  CI_PROJECT_PATH_SLUG=www-$CI_PROJECT_NAME
+  NOMAD_TOKEN_PROD=test
+  NOMAD_VAR_HOSTNAMES='["offshoot"]'
+  expects 'nomad cluster https://prod.archive.org' \
+          'deploying to https://offshoot.prod.archive.org'
+)
 
 set +x
 echo; echo; echo SUCCESS
