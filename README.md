@@ -428,8 +428,9 @@ CMD echo DATABASE_URL=postgres://postgres:${POSTGRESQL_PASSWORD}@${NOMAD_ADDR_db
 - You can use the same `NOMAD_VAR_` options above to tailor your deploy in the [#Customizing](#Customizing) section above.  [Documentation and examples here](https://github.com/internetarchive/cicd#readme).
 
 ## GitHub Secrets
-- You can add GitHub secrets to your repo from the GitHub GUI.  You then need to get those secrets to pass through to the [deploy] phase, using the `NOMAD_SECRETS` setting in the GitHub Actions workflow yaml file.
-- Here is an example GH repo that passes 2 GH secrets into the [deploy] phase.  Each secret will wind up as environment variable that your servers can read, or your `RUN`/`CMD` entrypoint can read:
+- You can add GitHub secrets to your repo from the GitHub GUI ([documentation](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository)). You then need to get those secrets to pass through to the [deploy] phase, using the `NOMAD_SECRETS` setting in the GitHub Actions workflow yaml file.
+- Note that you may want to test with repository or organizational level secrets before proceeding to setup environment secrets ( [documentation around creating secrets for an environment](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository) )
+- Here is an example GH repo that passes 2 GH secrets into the [deploy] phase. Each secret will wind up as environment variable that your servers can read, or your `RUN`/`CMD` entrypoint can read:
   - https://github.com/traceypooh/staticman/blob/main/.github/workflows/cicd.yml
     - [entrypoint setup](https://github.com/traceypooh/staticman/blob/main/Dockerfile)
     - [entrypoint script](https://github.com/traceypooh/staticman/blob/main/entrypoint.sh)
