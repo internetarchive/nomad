@@ -50,6 +50,18 @@ function expects() {
           'deploying to https://av.dev.archive.org'
 )
 (
+  echo GL to prod, via alt/unusual branch name, custom hostname
+  BASE_DOMAIN=prod.archive.org
+  CI_PROJECT_NAME=av
+  CI_COMMIT_REF_SLUG=avinfo
+  CI_PROJECT_PATH_SLUG=www-$CI_PROJECT_NAME
+  NOMAD_VAR_HOSTNAMES='["avinfo"]'
+  NOMAD_TOKEN_PROD=test
+  expects 'nomad cluster https://prod.archive.org' \
+          'deploying to https://avinfo.prod.archive.org' \
+          'using nomad production token'
+)
+(
   echo GL to dev, branch, so custom hostname ignored
   BASE_DOMAIN=dev.archive.org
   CI_PROJECT_NAME=av

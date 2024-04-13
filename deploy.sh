@@ -40,7 +40,7 @@ function main() {
   PRODUCTION=
   if [ "$CI_COMMIT_REF_SLUG" = "main" -o "$CI_COMMIT_REF_SLUG" = "master" ]; then
     MAIN_OR_PROD_OR_STAGING=1
-  elif [ "$CI_COMMIT_REF_SLUG" = "production" ]; then
+  elif [ "$CI_COMMIT_REF_SLUG" = "production" -o "$BASE_DOMAIN" = "prod.archive.org" ]; then
     PRODUCTION=1
     MAIN_OR_PROD_OR_STAGING=1
   elif [ "$CI_COMMIT_REF_SLUG" = "staging" ]; then
