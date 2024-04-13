@@ -11,7 +11,8 @@ function expects() {
   NOMAD_VAR_VERBOSE=1
   NOMAD_TOKEN=test
   LOG=/tmp/nomad-test.log
-  PATH=$PATH:/opt/homebrew/bin
+  # for local testing, find `deno` binary:
+  PATH=$PATH:/opt/homebrew/bin:$HOME/.deno/bin
 
   set -x
   bash -eu ./deploy.sh 2>&1 | tee $LOG
@@ -27,6 +28,8 @@ function expects() {
 }
 
 # test various deploy scenarios (verify expected hostname and cluster get used)
+# NOTE: the CI_    * vars are normally auto-poplated by CI/CD GL (gitlab) yaml setup
+# NOTE: the GITHUB_* vars are normally auto-poplated in CI/CD GH Actions by GH (github)
 (
   echo GL to dev
   BASE_DOMAIN=dev.archive.org
