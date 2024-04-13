@@ -8,6 +8,21 @@ function verbose() {
 
 
 function main() {
+  if [ $NOMAD_TOKEN = test ]; then
+    # during testing, set any var that isn't set, to an empty string, when the var gets used later
+    NOMAD_VAR_NO_DEPLOY=${NOMAD_VAR_NO_DEPLOY:-""}
+    GITHUB_ACTIONS=${GITHUB_ACTIONS:-""}
+    NOMAD_VAR_HOSTNAMES=${NOMAD_VAR_HOSTNAMES:-""}
+    CI_REGISTRY_READ_TOKEN=${CI_REGISTRY_READ_TOKEN:-""}
+    NOMAD_VAR_COUNT=${NOMAD_VAR_COUNT:-""}
+    NOMAD_SECRETS=${NOMAD_SECRETS:-""}
+    NOMAD_ADDR=${NOMAD_ADDR:-""}
+    NOMAD_TOKEN_PROD=${NOMAD_TOKEN_PROD:-""}
+    NOMAD_TOKEN_STAGING=${NOMAD_TOKEN_STAGING:-""}
+    PRIVATE_REPO=${PRIVATE_REPO:-""}
+  fi
+
+
   # IF someone set this programmatically in their project yml `before_script:` tag, etc., exit
   if [ "$NOMAD_VAR_NO_DEPLOY" ]; then exit 0; fi
 
@@ -125,7 +140,7 @@ function main() {
 
 
 
-  if [ "$1" = "stop" ]; then
+  if [ "$ARG1" = "stop" ]; then
     nomad stop $NOMAD_VAR_SLUG
     exit 0
   fi
@@ -178,12 +193,12 @@ function main() {
 
   verbose "NOMAD_VAR_SLUG variable substitution"
   # Do the one current substitution nomad v1.0.3 can't do now (apparently a bug)
-  sed -i "s/NOMAD_VAR_SLUG/$NOMAD_VAR_SLUG/" project.hcl
+  sed -ix "s/NOMAD_VAR_SLUG/$NOMAD_VAR_SLUG/" project.hcl
 
   case "$NOMAD_ADDR" in
     https://etc.archive.org|https://work.archive.org|https://hind.archive.org|https://dev.archive.org)
       # HinD cluster(s) use `podman` driver instead of `docker`
-      sed -i 's/driver\s*=\s*"docker"/driver="podman"/'  project.hcl;; # xxx
+      sed -ix 's/driver\s*=\s*"docker"/driver="podman"/'  project.hcl;; # xxx
   esac
 
   verbose "Handling NOMAD_SECRETS."
@@ -206,6 +221,8 @@ EOF
   deno eval 'Object.entries(Deno.env.toObject()).map(([k, v]) => console.log("export NOMAD_VAR_"+k+"="+JSON.stringify(v)))' | grep -E '^export NOMAD_VAR_CI_' >| ci.env
   source ci.env
   rm     ci.env
+
+  if [ $NOMAD_TOKEN = test ]; then exit 0; fi
 
   set -x
   nomad validate -var-file=env.env project.hcl
@@ -292,4 +309,8 @@ function github-setup() {
   if [ "$NOMAD_TOKEN" = "" -a "$NOMAD_TOKEN_PROD" = "" -a "$NOMAD_TOKEN_STAGING" = "" ]; then exit 0; fi
 }
 
-main "$1"
+
+ARG1=
+if [ $# -gt 0 ]; then ARG1=$1; fi
+
+main
