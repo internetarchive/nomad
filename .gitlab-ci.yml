@@ -40,8 +40,7 @@ test:
     - apk add zsh
     - env -i zsh -euax test/test.sh
   rules:
-    - if: '$CI_PROJECT_PATH_SLUG = internetarchive-nomad'
-
+    - if: '$CI_PROJECT_PATH_SLUG == "internetarchive-nomad"'
 
 deploy:
   stage: deploy
