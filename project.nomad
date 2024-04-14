@@ -83,11 +83,6 @@ variable "PORTS" {
   # You must have at least one key/value pair, with a single value of 'http'.
   # Each value is a string that refers to your port later in the project jobspec.
   #
-  # Note: these are all public ports, right out to the browser.
-  #
-  # Note: for a single *nomad cluster* -- anything not 5000 must be
-  #       *unique* across *all* projects deployed there.
-  #
   # Note: use -1 for your port to tell nomad & docker to *dynamically* assign you a random high port
   #       then your repo can read the environment variable: NOMAD_PORT_http upon startup to know
   #       what your main daemon HTTP listener should listen on.
@@ -152,6 +147,7 @@ locals {
 
   # Use CI_GITHUB_IMAGE if set, otherwise use GitLab vars interpolated string
   docker_image = var.CI_GITHUB_IMAGE != "" ? var.CI_GITHUB_IMAGE : "${var.CI_REGISTRY_IMAGE}/${var.CI_COMMIT_REF_SLUG}:${var.CI_COMMIT_SHA}"
+  # "
 
   # GitLab docker login user/pass timeout rather quickly.  If admin set CI_REGISTRY_READ_TOKEN key
   # in the group/repo [Settings] [CI/CD] [Variables] - then use a token-based alternative to deploy.
