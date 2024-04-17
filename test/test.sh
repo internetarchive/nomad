@@ -31,7 +31,7 @@ function expects() {
 }
 
 function tags() {
-  STR=$(jq -cr '[..|objects|.Tags//empty | .[]]'  /tmp/project.json)
+  STR=$(jq -cr '[..|objects|.Tags//empty]'  /tmp/project.json)
   if [ "$STR" != "$1" ]; then
     set +x
     echo "services tags: $STR not expected: $1"
@@ -40,7 +40,7 @@ function tags() {
 }
 
 function ctags() {
-  STR=$(jq -cr '[..|objects|.CanaryTags//empty | .[]]'  /tmp/project.json)
+  STR=$(jq -cr '[..|objects|.CanaryTags//empty]'  /tmp/project.json)
   if [ "$STR" != "$1" ]; then
     set +x
     echo "services canary tags: $STR not expected: $1"
@@ -59,8 +59,8 @@ function ctags() {
   CI_PROJECT_PATH_SLUG=www-$CI_PROJECT_NAME
   expects 'nomad cluster https://dev.archive.org' \
           'deploying to https://www-av.dev.archive.org'
-  tags '["https://www-av.dev.archive.org"]'
-  ctags '["https://canary-www-av.dev.archive.org/"]'
+  tags '[["https://www-av.dev.archive.org"]]'
+  ctags '[["https://canary-www-av.dev.archive.org"]]'
 )
 (
   banner GL to dev, custom hostname
@@ -71,8 +71,8 @@ function ctags() {
   NOMAD_VAR_HOSTNAMES='["av"]'
   expects 'nomad cluster https://dev.archive.org' \
           'deploying to https://av.dev.archive.org'
-  tags '["https://av.dev.archive.org"]'
-  ctags '["https://canary-av.dev.archive.org/"]'
+  tags '[["https://av.dev.archive.org"]]'
+  ctags '[["https://canary-av.dev.archive.org"]]'
 )
 (
   banner GL to dev, w/ 2+ custom hostnames
@@ -83,8 +83,10 @@ function ctags() {
   NOMAD_VAR_HOSTNAMES='["av1", "av2.dweb.me", "poohbot.com"]'
   expects 'nomad cluster https://dev.archive.org' \
           'deploying to https://av1.dev.archive.org'
-  tags '["https://av1.dev.archive.org","https://av2.dweb.me","https://poohbot.com"]'
-  ctags '["https://canary-av1.dev.archive.org/","https://canary-av2.dweb.me/","https://canary-poohbot.com/"]'
+  # NOTE: subtle -- with multiple names to single port deploy, we expect a list of 3 hostnames
+  #       applying to *one* service
+  tags '[["https://av1.dev.archive.org","https://av2.dweb.me","https://poohbot.com"]]'
+  ctags '[["https://canary-av1.dev.archive.org","https://canary-av2.dweb.me","https://canary-poohbot.com"]]'
 )
 (
   banner GL to dev, branch, so custom hostname ignored
@@ -106,8 +108,8 @@ function ctags() {
   expects 'nomad cluster https://prod.archive.org' \
           'deploying to https://plausible.prod.archive.org' \
           'using nomad production token'
-  tags '["urlprefix-plausible.prod.archive.org"]'
-  ctags '["https://canary-plausible.prod.archive.org/"]'
+  tags '[["urlprefix-plausible.prod.archive.org"]]'
+  ctags '[["https://canary-plausible.prod.archive.org"]]'
 )
 (
   banner GL to prod, custom hostname
@@ -171,8 +173,10 @@ function ctags() {
   NOMAD_VAR_PORTS='{ 9999 = "http" , 18989 = "lcp", 8990 = "lsd" }'
   expects 'nomad cluster https://dev.archive.org' \
           'deploying to https://services-lcp.dev.archive.org'
-  tags '["https://services-lcp.dev.archive.org","http://services-lcp-lcp.dev.archive.org","https://services-lcp-lsd.dev.archive.org"]'
-  ctags '["https://canary-services-lcp.dev.archive.org/"]'
+  # NOTE: subtle -- with multiple ports (one thus one service per port), we expect 3 services
+  #       eacho with its own hostname
+  tags '[["https://services-lcp.dev.archive.org"],["http://services-lcp-lcp.dev.archive.org"],["https://services-lcp-lsd.dev.archive.org"]]'
+  ctags '[["https://canary-services-lcp.dev.archive.org"]]'
 )
 (
   banner GL repo using one HTTP-only port and 2+ ports/names, to prod
@@ -185,8 +189,10 @@ function ctags() {
   expects 'nomad cluster https://prod.archive.org' \
           'deploying to https://lcp.prod.archive.org' \
           'using nomad production token'
-  tags '["urlprefix-lcp.prod.archive.org","urlprefix-lcp-lcp.prod.archive.org proto=http","urlprefix-lcp-lsd.prod.archive.org"]'
-  ctags '["https://canary-lcp.prod.archive.org/"]'
+  # NOTE: subtle -- with multiple ports (one thus one service per port), we expect 3 services
+  #       eacho with its own hostname
+  tags '[["urlprefix-lcp.prod.archive.org"],["urlprefix-lcp-lcp.prod.archive.org proto=http"],["urlprefix-lcp-lsd.prod.archive.org"]]'
+  ctags '[["https://canary-lcp.prod.archive.org"]]'
 )
 (
   banner GL repo using one TCP-only port and 2+ ports/names
@@ -197,8 +203,10 @@ function ctags() {
   NOMAD_VAR_PORTS='{ 9999 = "http" , -7777 = "tcp", 8889 = "reg" }'
   expects 'nomad cluster https://dev.archive.org' \
           'deploying to https://services-scribe-c2.dev.archive.org'
-  tags '["https://services-scribe-c2.dev.archive.org","https://services-scribe-c2-reg.dev.archive.org"]'
-  ctags '["https://canary-services-scribe-c2.dev.archive.org/"]'
+  # NOTE: subtle -- with multiple ports (one thus one service per port), we'd normally expect 3 services
+  #       eacho with its own hostname -- but one is TCP so the middle Service gets an *empty* list of tags.
+  tags '[["https://services-scribe-c2.dev.archive.org"],[],["https://services-scribe-c2-reg.dev.archive.org"]]'
+  ctags '[["https://canary-services-scribe-c2.dev.archive.org"]]'
 )
 
 

@@ -270,7 +270,7 @@ job "NOMAD_VAR_SLUG" {
 
         tags = [for HOST in var.HOSTNAMES: local.legacy2 ? "urlprefix-${HOST}" : "https://${HOST}"]
 
-        canary_tags = [for HOST in var.HOSTNAMES: "https://canary-${HOST}/"]
+        canary_tags = [for HOST in var.HOSTNAMES: "https://canary-${HOST}"]
 
         port = "http"
         check {
