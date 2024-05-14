@@ -83,11 +83,6 @@ variable "PORTS" {
   # You must have at least one key/value pair, with a single value of 'http'.
   # Each value is a string that refers to your port later in the project jobspec.
   #
-  # Note: these are all public ports, right out to the browser.
-  #
-  # Note: for a single *nomad cluster* -- anything not 5000 must be
-  #       *unique* across *all* projects deployed there.
-  #
   # Note: use -1 for your port to tell nomad & docker to *dynamically* assign you a random high port
   #       then your repo can read the environment variable: NOMAD_PORT_http upon startup to know
   #       what your main daemon HTTP listener should listen on.
@@ -152,6 +147,7 @@ locals {
 
   # Use CI_GITHUB_IMAGE if set, otherwise use GitLab vars interpolated string
   docker_image = var.CI_GITHUB_IMAGE != "" ? var.CI_GITHUB_IMAGE : "${var.CI_REGISTRY_IMAGE}/${var.CI_COMMIT_REF_SLUG}:${var.CI_COMMIT_SHA}"
+  # "
 
   # GitLab docker login user/pass timeout rather quickly.  If admin set CI_REGISTRY_READ_TOKEN key
   # in the group/repo [Settings] [CI/CD] [Variables] - then use a token-based alternative to deploy.
@@ -189,12 +185,10 @@ locals {
     {for portnum, portname in local.ports_extra_https: portname => [
       # If the main deploy hostname is `card.example.com`, and a 2nd port is named `backend`,
       # then make its hostname be `card-backend.example.com`
-      "urlprefix-${local.host0}-${portname}.${local.host0domain}:443/",
-      local.legacy ? "urlprefix-${var.HOSTNAMES[0]}:${portnum}/" : # xxx
-        "urlprefix-${local.host0}-${portname}.${local.host0domain}:80/ redirect=308,https://${local.host0}-${portname}.${local.host0domain}$path"
+      "urlprefix-${local.host0}-${portname}.${local.host0domain}"
     ]},
     {for portnum, portname in local.ports_extra_http: portname => [
-      "urlprefix-${local.host0}-${portname}.${local.host0domain}/ proto=http"
+      "urlprefix-${local.host0}-${portname}.${local.host0domain} proto=http"
     ]},
     {for portnum, portname in local.ports_extra_tcp: portname => [
       "urlprefix-:${portnum} proto=tcp"
@@ -274,13 +268,9 @@ job "NOMAD_VAR_SLUG" {
         name = "${var.SLUG}"
         task = "http"
 
-        tags = concat(
-          [for HOST in var.HOSTNAMES: local.legacy2 ? "urlprefix-${HOST}:443/" : "https://${HOST}"],
-          local.legacy2 ? [for HOST in var.HOSTNAMES: "urlprefix-${HOST}:80/ redirect=308,https://${HOST}$path"] : [])
+        tags = [for HOST in var.HOSTNAMES: local.legacy2 ? "urlprefix-${HOST}" : "https://${HOST}"]
 
-        canary_tags = concat(
-          [for HOST in var.HOSTNAMES: local.legacy2 ? "urlprefix-canary-${HOST}:443/" : "https://canary-${HOST}/"],
-          local.legacy2 ? [for HOST in var.HOSTNAMES: "urlprefix-canary-${HOST}:80/ redirect=308,https://canary-${HOST}/"] : [])
+        canary_tags = [for HOST in var.HOSTNAMES: "https://canary-${HOST}"]
 
         port = "http"
         check {
