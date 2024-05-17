@@ -33,7 +33,7 @@ include:
   # - remote: 'https://gitlab.com/gitlab-org/gitlab-foss/-/raw/master/lib/gitlab/ci/templates/Jobs/Build.gitlab-ci.yml'
 
 
-test:
+test-ourself:
   stage: test
   script:
     - env -i zsh -euax test/test.sh
