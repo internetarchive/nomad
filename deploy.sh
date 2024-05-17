@@ -8,7 +8,7 @@ function verbose() {
 
 
 function main() {
-  if [ $NOMAD_TOKEN = test ]; then
+  if [ "$NOMAD_TOKEN" = test ]; then
     # during testing, set any var that isn't set, to an empty string, when the var gets used later
     NOMAD_VAR_NO_DEPLOY=${NOMAD_VAR_NO_DEPLOY:-""}
     GITHUB_ACTIONS=${GITHUB_ACTIONS:-""}
@@ -225,7 +225,10 @@ EOF
   source ci.env
   rm     ci.env
 
-  if [ $NOMAD_TOKEN = test ]; then exit 0; fi
+  if [ "$NOMAD_TOKEN" = test ]; then
+    nomad run -output -var-file=env.env project.hcl >| project.json
+    exit 0
+  fi
 
   set -x
   nomad validate -var-file=env.env project.hcl
