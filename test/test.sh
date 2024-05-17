@@ -19,6 +19,10 @@ function expects() {
   LOG=/tmp/nomad-test.log
   # for testing, find `deno` and `nomad` binary executables:
   PATH=$PATH:/usr/local/sbin:/opt/homebrew/bin:$HOME/.deno/bin
+  # `deno` needs this -- and is set in the `denoland/deno:alpine`.  however, due to avoiding
+  # env var "leaking" into tests, we removed it (which will cause `deno` to fail to run).
+  # so add it back in
+  LD_LIBRARY_PATH=/usr/local/lib
 
   set -x
   bash -eu ./deploy.sh 2>&1 | tee $LOG
