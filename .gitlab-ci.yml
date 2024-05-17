@@ -39,6 +39,8 @@ test:
   script:
     - env -i zsh -euax test/test.sh
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
     - if: '$CI_PROJECT_PATH_SLUG == "internetarchive-nomad"'
 
 deploy:
