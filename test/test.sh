@@ -397,10 +397,11 @@ function prodtest() {
   prodtest
 )
 (
+  NOMAD_VAR_HOSTNAMES='["parse_dates"]'
   CI_PROJECT_PATH_SLUG=services-parse-dates
   CI_COMMIT_REF_SLUG=production
   CI_HOSTNAME=parse_dates.prod.archive.org
-  # prodtest # xxx _ vs current - rules
+  prodtest
 )
 
 banner SUCCESS
