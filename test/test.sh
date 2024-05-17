@@ -92,8 +92,8 @@ function prodtest() {
   expects 'nomad cluster https://prod.archive.org' \
           'deploying to https://avinfo.prod.archive.org' \
           'using nomad production token'
-  tags '[["https://avinfo.prod.archive.org"]]'
-  ctags '[["https://avinfo.prod.archive.org"]]'
+  tags '[["urlprefix-avinfo.prod.archive.org"]]'
+  ctags '[["https://canary-avinfo.prod.archive.org"]]'
 )
 (
   echo GL to prod, via alt/unusual branch name, custom hostname
