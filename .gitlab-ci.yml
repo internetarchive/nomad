@@ -35,6 +35,7 @@ include:
 
 test:
   stage: test
+  image: ${CI_REGISTRY_IMAGE}/${CI_COMMIT_REF_SLUG}:${CI_COMMIT_SHA}
   script:
     - env -i zsh -euax test/test.sh
   rules:
