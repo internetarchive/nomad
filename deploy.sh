@@ -40,7 +40,10 @@ function main() {
   PRODUCTION=
   if [ "$CI_COMMIT_REF_SLUG" = "main" -o "$CI_COMMIT_REF_SLUG" = "master" ]; then
     MAIN_OR_PROD_OR_STAGING=1
-  elif [ "$CI_COMMIT_REF_SLUG" = "production" ]; then
+  elif [ "$CI_COMMIT_REF_SLUG" = "production" -o "$BASE_DOMAIN" = "prod.archive.org" ]; then
+    # NOTE: 2nd part of clause is _very_ unusual -- but it's where a repo can elect to have
+    # another branch name (not `production`) deploy to production cluster via (typically) various
+    # gitlab CI/CD variables pegged to that branch name.
     PRODUCTION=1
     MAIN_OR_PROD_OR_STAGING=1
   elif [ "$CI_COMMIT_REF_SLUG" = "staging" ]; then

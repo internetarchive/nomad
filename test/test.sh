@@ -52,6 +52,13 @@ function ctags() {
   fi
 }
 
+function prodtest() {
+  CI_PROJECT_NAME=$(echo "$CI_PROJECT_PATH_SLUG" |cut -f2- -d-)
+  BASE_DOMAIN=${BASE_DOMAIN:-"prod.archive.org"} # default to prod.archive.org unless caller set it
+  NOMAD_TOKEN_PROD=test
+  expects "deploying to https://$CI_HOSTNAME"
+}
+
 # test various deploy scenarios (verify expected hostname and cluster get used)
 # NOTE: the CI_    * vars are normally auto-poplated by CI/CD GL (gitlab) yaml setup
 # NOTE: the GITHUB_* vars are normally auto-poplated in CI/CD GH Actions by GH (github)
@@ -79,6 +86,33 @@ function ctags() {
   ctags '[["https://canary-av.dev.archive.org"]]'
 )
 (
+  echo GL to prod, via alt/unusual branch name, custom hostname
+  BASE_DOMAIN=prod.archive.org
+  CI_PROJECT_NAME=av
+  CI_COMMIT_REF_SLUG=avinfo
+  CI_PROJECT_PATH_SLUG=www-$CI_PROJECT_NAME
+  NOMAD_VAR_HOSTNAMES='["avinfo"]'
+  NOMAD_TOKEN_PROD=test
+  expects 'nomad cluster https://prod.archive.org' \
+          'deploying to https://avinfo.prod.archive.org' \
+          'using nomad production token'
+  tags '[["urlprefix-avinfo.prod.archive.org"]]'
+  ctags '[["https://canary-avinfo.prod.archive.org"]]'
+)
+(
+  echo GL to prod, via alt/unusual branch name, custom hostname
+  BASE_DOMAIN=prod.archive.org
+  CI_PROJECT_NAME=plausible
+  CI_COMMIT_REF_SLUG=plausible-ait
+  CI_PROJECT_PATH_SLUG=services-$CI_PROJECT_NAME
+  NOMAD_VAR_HOSTNAMES='["plausible-ait"]'
+  NOMAD_TOKEN_PROD=test
+  expects 'nomad cluster https://prod.archive.org' \
+          'deploying to https://plausible-ait.prod.archive.org' \
+          'using nomad production token'
+)
+(
+  echo GL to dev, branch, so custom hostname ignored
   banner GL to dev, w/ 2+ custom hostnames
   BASE_DOMAIN=dev.archive.org
   CI_PROJECT_NAME=av
@@ -213,5 +247,161 @@ function ctags() {
   ctags '[["https://canary-services-scribe-c2.dev.archive.org"]]'
 )
 
+
+# a bunch of quick, simple production deploy tests validating hostnames
+(
+  CI_PROJECT_PATH_SLUG=services-article-exchange
+  CI_COMMIT_REF_SLUG=production
+  CI_HOSTNAME=article-exchange.prod.archive.org
+  prodtest
+)
+(
+  CI_PROJECT_PATH_SLUG=services-atlas
+  CI_COMMIT_REF_SLUG=production
+  CI_HOSTNAME=atlas.prod.archive.org
+  prodtest
+)
+(
+  CI_PROJECT_PATH_SLUG=services-bwhogs
+  CI_COMMIT_REF_SLUG=production
+  CI_HOSTNAME=bwhogs.prod.archive.org
+  prodtest
+)
+(
+  CI_PROJECT_PATH_SLUG=services-ids-logic
+  CI_COMMIT_REF_SLUG=production
+  CI_HOSTNAME=ids-logic.prod.archive.org
+  prodtest
+)
+(
+  CI_PROJECT_PATH_SLUG=services-lcp
+  CI_COMMIT_REF_SLUG=production
+  CI_HOSTNAME=lcp.prod.archive.org
+  prodtest
+)
+(
+  CI_PROJECT_PATH_SLUG=services-microfilmmonitor
+  CI_COMMIT_REF_SLUG=production
+  CI_HOSTNAME=microfilmmonitor.prod.archive.org
+  prodtest
+)
+(
+  CI_PROJECT_PATH_SLUG=services-oclc-ill
+  CI_COMMIT_REF_SLUG=production
+  CI_HOSTNAME=oclc-ill.prod.archive.org
+  prodtest
+)
+(
+  CI_PROJECT_PATH_SLUG=services-odyssey
+  CI_COMMIT_REF_SLUG=production
+  CI_HOSTNAME=odyssey.prod.archive.org
+  prodtest
+)
+(
+  CI_PROJECT_PATH_SLUG=services-opds
+  CI_COMMIT_REF_SLUG=production
+  CI_HOSTNAME=opds.prod.archive.org
+  prodtest
+)
+(
+  CI_PROJECT_PATH_SLUG=services-plausible
+  CI_COMMIT_REF_SLUG=production
+  CI_HOSTNAME=plausible.prod.archive.org
+  prodtest
+)
+(
+  CI_PROJECT_PATH_SLUG=services-rapid-slackbot
+  CI_COMMIT_REF_SLUG=production
+  CI_HOSTNAME=rapid-slackbot.prod.archive.org
+  prodtest
+)
+(
+  CI_PROJECT_PATH_SLUG=services-scribe-serial-helper
+  CI_COMMIT_REF_SLUG=production
+  CI_HOSTNAME=scribe-serial-helper.prod.archive.org
+  prodtest
+)
+(
+  CI_PROJECT_PATH_SLUG=www-av
+  CI_COMMIT_REF_SLUG=production
+  CI_HOSTNAME=av.prod.archive.org
+  prodtest
+)
+(
+  CI_PROJECT_PATH_SLUG=www-bookserver
+  CI_COMMIT_REF_SLUG=production
+  CI_HOSTNAME=bookserver.prod.archive.org
+  prodtest
+)
+(
+  CI_PROJECT_PATH_SLUG=www-iiif
+  CI_COMMIT_REF_SLUG=production
+  CI_HOSTNAME=iiif.prod.archive.org
+  prodtest
+)
+(
+  CI_PROJECT_PATH_SLUG=www-nginx
+  CI_COMMIT_REF_SLUG=production
+  CI_HOSTNAME=nginx.prod.archive.org
+  prodtest
+)
+(
+  CI_PROJECT_PATH_SLUG=www-rendertron
+  CI_COMMIT_REF_SLUG=production
+  CI_HOSTNAME=rendertron.prod.archive.org
+  prodtest
+)
+
+
+# a bunch of quick, _custom HOSTNAMES_, production deploy tests validating hostnames
+(
+  NOMAD_VAR_HOSTNAMES='["popcorn.archive.org"]'
+  CI_PROJECT_PATH_SLUG=www-popcorn
+  CI_COMMIT_REF_SLUG=production
+  CI_HOSTNAME=popcorn.archive.org
+  prodtest
+)
+(
+  NOMAD_VAR_HOSTNAMES='["polyfill.archive.org"]'
+  CI_PROJECT_PATH_SLUG=www-polyfill-io-production
+  CI_COMMIT_REF_SLUG=production
+  CI_HOSTNAME=polyfill.archive.org
+  prodtest
+)
+(
+  NOMAD_VAR_HOSTNAMES='["purl.archive.org"]'
+  CI_PROJECT_PATH_SLUG=www-purl
+  CI_COMMIT_REF_SLUG=production
+  CI_HOSTNAME=purl.archive.org
+  prodtest
+)
+(
+  NOMAD_VAR_HOSTNAMES='["esm.archive.org"]'
+  CI_PROJECT_PATH_SLUG=www-esm
+  CI_COMMIT_REF_SLUG=production
+  CI_HOSTNAME=esm.archive.org
+  prodtest
+)
+(
+  NOMAD_VAR_HOSTNAMES='["cantaloupe.prod.archive.org"]'
+  CI_PROJECT_PATH_SLUG=services-ia-iiif-cantaloupe-experiment
+  CI_COMMIT_REF_SLUG=production
+  CI_HOSTNAME=cantaloupe.prod.archive.org
+  prodtest
+)
+(
+  NOMAD_VAR_HOSTNAMES='["plausible-ait.prod.archive.org"]'
+  CI_PROJECT_PATH_SLUG=services-plausible
+  CI_COMMIT_REF_SLUG=production-ait
+  CI_HOSTNAME=plausible-ait.prod.archive.org
+  prodtest
+)
+(
+  NOMAD_VAR_HOSTNAMES='["parse_dates"]'
+  CI_PROJECT_PATH_SLUG=services-parse-dates
+  CI_COMMIT_REF_SLUG=production
+  CI_HOSTNAME=parse_dates.prod.archive.org
+  prodtest
+)
 
 banner SUCCESS
