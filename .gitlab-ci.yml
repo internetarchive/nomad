@@ -35,9 +35,12 @@ include:
 
 test:
   stage: test
+  image: ${CI_REGISTRY_IMAGE}/${CI_COMMIT_REF_SLUG}:${CI_COMMIT_SHA}
   script:
     - env -i zsh -euax test/test.sh
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
     - if: '$CI_PROJECT_PATH_SLUG == "internetarchive-nomad"'
 
 deploy:
