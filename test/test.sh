@@ -52,6 +52,15 @@ function ctags() {
   fi
 }
 
+function slug() {
+  STR=$(jq -cr '.Job.ID'  /tmp/project.json)
+  if [ "$STR" != "$1" ]; then
+    set +x
+    echo "slug/job name: $STR not expected: $1"
+    exit 1
+  fi
+}
+
 function prodtest() {
   CI_PROJECT_NAME=$(echo "$CI_PROJECT_PATH_SLUG" |cut -f2- -d-)
   BASE_DOMAIN=${BASE_DOMAIN:-"prod.archive.org"} # default to prod.archive.org unless caller set it
@@ -72,6 +81,7 @@ function prodtest() {
           'deploying to https://www-av.dev.archive.org'
   tags '[["https://www-av.dev.archive.org"]]'
   ctags '[["https://canary-www-av.dev.archive.org"]]'
+  slug www-av
 )
 (
   banner GL to dev, custom hostname
@@ -84,6 +94,7 @@ function prodtest() {
           'deploying to https://av.dev.archive.org'
   tags '[["https://av.dev.archive.org"]]'
   ctags '[["https://canary-av.dev.archive.org"]]'
+  slug www-av
 )
 (
   echo GL to prod, via alt/unusual branch name, custom hostname
@@ -98,6 +109,7 @@ function prodtest() {
           'using nomad production token'
   tags '[["urlprefix-avinfo.prod.archive.org"]]'
   ctags '[["https://canary-avinfo.prod.archive.org"]]'
+  slug www-av-avinfo
 )
 (
   echo GL to prod, via alt/unusual branch name, custom hostname
@@ -135,6 +147,7 @@ function prodtest() {
   NOMAD_VAR_HOSTNAMES='["av"]'
   expects 'nomad cluster https://dev.archive.org' \
           'deploying to https://www-av-tofu.dev.archive.org'
+  slug www-av-tofu
 )
 (
   banner GL to prod
@@ -201,6 +214,7 @@ function prodtest() {
   NOMAD_VAR_HOSTNAMES='["offshoot"]'
   expects 'nomad cluster https://prod.archive.org' \
           'deploying to https://offshoot.prod.archive.org'
+  slug www-offshoot
 )
 (
   banner GL repo using one HTTP-only port and 2+ ports/names, to dev
