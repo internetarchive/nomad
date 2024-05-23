@@ -7,9 +7,10 @@ RUN mkdir -m777 /usr/local/sbin  && \
     unzip     nomad.zip  && \
     rm        nomad.zip  && \
     chmod 777 nomad && \
-    apk add bash zsh jq
+    # podman for build.sh
+    apk add bash zsh jq podman
 
-COPY deploy.sh /
+COPY build.sh deploy.sh /
 USER deno
 
 # NOTE: `nomad` binary needed for other repositories using us for CI/CD - but drop from _our_ webapp.
