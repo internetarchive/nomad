@@ -24,8 +24,8 @@ build:
         # For IA SERVERLESS CI/CD pipelines, we only want to make (2nd) tag of `:latest` for our
         # built image *after* [test] phase runs successfully (since that's our logical deploy)
         echo "dont tag/push to :latest now -- save for [deploy-serverless] job"
-        sed -i 's/docker push .*image_latest.*//' /build.sh
-        sed -i      's/\-\-tag ..image_latest.//' /build.sh
+        sed -ix 's/docker push .*image_latest.*//' /build.sh
+        sed -ix      's/\-\-tag ..image_latest.//' /build.sh
       fi
 
     - /build.sh
