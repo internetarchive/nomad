@@ -2,13 +2,11 @@
 # This is the adapted & simplified from:
 # https://gitlab.com/gitlab-org/gitlab/-/raw/master/lib/gitlab/ci/templates/Jobs/Build.gitlab-ci.yml
 
-variables:
-  AUTO_BUILD_IMAGE_VERSION: 'v1.14.0'
-
 build:
   stage: build
-  # image: '${CI_TEMPLATE_REGISTRY_HOST}/gitlab-org/cluster-integration/auto-build-image:${AUTO_BUILD_IMAGE_VERSION}'
-  image: registry.gitlab.com/internetarchive/auto-build-image/main:latest
+  # If need to rebuild this image while runners are down, `cd` to this directory, then:
+  # sudo podman build --net=host --tag registry.gitlab.com/internetarchive/nomad/master . && sudo podman push registry.gitlab.com/internetarchive/nomad/master
+  image: registry.gitlab.com/internetarchive/nomad/master
   variables:
     DOCKER_TLS_CERTDIR: ''
   script:
@@ -26,11 +24,11 @@ build:
         # For IA SERVERLESS CI/CD pipelines, we only want to make (2nd) tag of `:latest` for our
         # built image *after* [test] phase runs successfully (since that's our logical deploy)
         echo "dont tag/push to :latest now -- save for [deploy-serverless] job"
-        sed -i 's/docker push .*image_latest.*//' /build/build.sh
-        sed -i      's/\-\-tag ..image_latest.//' /build/build.sh
+        sed -i 's/docker push .*image_latest.*//' /build.sh
+        sed -i      's/\-\-tag ..image_latest.//' /build.sh
       fi
 
-    - /build/build.sh
+    - /build.sh
   artifacts:
     reports:
       dotenv: gl-auto-build-variables.env
