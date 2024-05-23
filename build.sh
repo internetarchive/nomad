@@ -36,6 +36,9 @@ if ! docker info &>/dev/null; then
   fi
 fi
 
+ls -l /run/podman/podman.sock || echo xxx
+podman info | grep path || echo xxx
+
 if [[ -n "$CI_REGISTRY" && -n "$CI_REGISTRY_USER" ]]; then
   echo "Logging in to GitLab Container Registry with CI credentials..."
   docker_login_filtered "$CI_REGISTRY_USER" "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
