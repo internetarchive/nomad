@@ -21,6 +21,15 @@ docker_login_filtered() {
 }
 
 
+if [[ -z "$CI_COMMIT_TAG" ]]; then
+  export CI_APPLICATION_REPOSITORY=${CI_APPLICATION_REPOSITORY:-$CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG}
+  export CI_APPLICATION_TAG=${CI_APPLICATION_TAG:-$CI_COMMIT_SHA}
+else
+  export CI_APPLICATION_REPOSITORY=${CI_APPLICATION_REPOSITORY:-$CI_REGISTRY_IMAGE}
+  export CI_APPLICATION_TAG=${CI_APPLICATION_TAG:-$CI_COMMIT_TAG}
+fi
+
+
 if ! docker info &>/dev/null; then
   if [ -z "$DOCKER_HOST" ] && [ "$KUBERNETES_PORT" ]; then
     export DOCKER_HOST='tcp://localhost:2375'
@@ -78,8 +87,12 @@ build_args=(
   --build-arg no_proxy="$no_proxy"
   $AUTO_DEVOPS_BUILD_IMAGE_EXTRA_ARGS
   --tag "$image_tagged"
-  --tag "$image_latest"
 )
+
+if [ "$NOMAD_VAR_SERVERLESS" != "" ]; then
+  build_args+=(--tag "$image_latest")
+fi
+
 
 if [[ -n "$AUTO_DEVOPS_BUILD_IMAGE_FORWARDED_CI_VARIABLES" ]]; then
   build_secret_file_path=/tmp/auto-devops-build-secrets
@@ -124,7 +137,10 @@ else
   docker build "${build_args[@]}" .
 
   docker push "$image_tagged"
-  docker push "$image_latest"
+
+  if [ "$NOMAD_VAR_SERVERLESS" != "" ]; then
+    docker push "$image_latest"
+  fi
 fi
 
 gl_write_auto_build_variables_file

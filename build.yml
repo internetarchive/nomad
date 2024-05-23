@@ -1,5 +1,5 @@
 # Tracey 3/2024:
-# This is the adapted & simplified from:
+# This was adapted & simplified from:
 # https://gitlab.com/gitlab-org/gitlab/-/raw/master/lib/gitlab/ci/templates/Jobs/Build.gitlab-ci.yml
 
 build:
@@ -10,24 +10,6 @@ build:
   variables:
     DOCKER_TLS_CERTDIR: ''
   script:
-    - |
-      if [[ -z "$CI_COMMIT_TAG" ]]; then
-        export CI_APPLICATION_REPOSITORY=${CI_APPLICATION_REPOSITORY:-$CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG}
-        export CI_APPLICATION_TAG=${CI_APPLICATION_TAG:-$CI_COMMIT_SHA}
-      else
-        export CI_APPLICATION_REPOSITORY=${CI_APPLICATION_REPOSITORY:-$CI_REGISTRY_IMAGE}
-        export CI_APPLICATION_TAG=${CI_APPLICATION_TAG:-$CI_COMMIT_TAG}
-      fi
-
-
-      if [ "$NOMAD_VAR_SERVERLESS" != "" ]; then
-        # For IA SERVERLESS CI/CD pipelines, we only want to make (2nd) tag of `:latest` for our
-        # built image *after* [test] phase runs successfully (since that's our logical deploy)
-        echo "dont tag/push to :latest now -- save for [deploy-serverless] job"
-        sed -ix 's/docker push .*image_latest.*//' /build.sh
-        sed -ix      's/\-\-tag ..image_latest.//' /build.sh
-      fi
-
     - /build.sh
   artifacts:
     reports:
