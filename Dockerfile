@@ -8,7 +8,9 @@ RUN mkdir -m777 /usr/local/sbin  && \
     rm        nomad.zip  && \
     chmod 777 nomad && \
     # podman for build.sh
-    apk add bash zsh jq podman
+    apk add bash zsh jq podman && \
+    # using podman not docker
+    ln -s /usr/bin/podman /usr/bin/docker
 
 COPY build.sh deploy.sh /
 USER deno
