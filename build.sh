@@ -1,7 +1,10 @@
 #!/bin/bash -e
 
 # FROM: registry.gitlab.com/internetarchive/auto-build-image/main
-# which was FROM: gitlab-org/cluster-integration/auto-build-image
+# which was
+# FROM registry.gitlab.com/gitlab-org/cluster-integration/auto-build-image:v1.14.0
+#
+# then pulled the unused heroku/buildpack stuff/clutter
 
 # build stage script for Auto-DevOps
 
@@ -42,80 +45,12 @@ function gl_write_auto_build_variables_file() {
   echo "CI_APPLICATION_TAG=$CI_APPLICATION_TAG@$(docker image inspect --format='{{ index (split (index .RepoDigests 0) "@") 1 }}' "$image_tagged")" > gl-auto-build-variables.env
 }
 
-if [[ "$AUTO_DEVOPS_BUILD_IMAGE_CNB_ENABLED" != "false" && ! -f Dockerfile && -z "${DOCKERFILE_PATH}" ]]; then
-  builder=${AUTO_DEVOPS_BUILD_IMAGE_CNB_BUILDER:-"heroku/buildpacks:20"}
-  default_port=${AUTO_DEVOPS_BUILD_IMAGE_CNB_PORT:-"5000"}
-  echo "Building Cloud Native Buildpack-based application with builder ${builder}..."
-  buildpack_args=()
-  if [[ -n "$BUILDPACK_URL" ]]; then
-    buildpack_args=('--buildpack' "$BUILDPACK_URL")
-  fi
-  volume_args=()
-  if [[ -n "$BUILDPACK_VOLUMES" ]]; then
-    mapfile -t vol_arg_names < <(echo "$BUILDPACK_VOLUMES" | tr '|' "\n")
-    for vol_arg_name in "${vol_arg_names[@]}"; do
-      volume_args+=('--volume' "$vol_arg_name")
-    done
-  fi
-  env_args=()
-  if [[ -n "$AUTO_DEVOPS_BUILD_IMAGE_FORWARDED_CI_VARIABLES" ]]; then
-    mapfile -t env_arg_names < <(echo "$AUTO_DEVOPS_BUILD_IMAGE_FORWARDED_CI_VARIABLES" | tr ',' "\n")
-    for env_arg_name in "${env_arg_names[@]}"; do
-      env_args+=('--env' "$env_arg_name")
-    done
-  fi
-  run_image=()
-  if [[ -n "$AUTO_DEVOPS_BUILD_IMAGE_CNB_RUN_IMAGE" ]]; then
-    run_image=('--run-image' "$AUTO_DEVOPS_BUILD_IMAGE_CNB_RUN_IMAGE")
-  fi
-  lifecycle_image=()
-  if [[ -n "$AUTO_DEVOPS_BUILD_IMAGE_CNB_LIFECYCLE_IMAGE" ]]; then
-    lifecycle_image=('--lifecycle-image' "$AUTO_DEVOPS_BUILD_IMAGE_CNB_LIFECYCLE_IMAGE")
-  fi
-  pack build tmp-cnb-image \
-    --builder "$builder" \
-    "${env_args[@]}" \
-    "${buildpack_args[@]}" \
-    "${volume_args[@]}" \
-    "${run_image[@]}" \
-    "${lifecycle_image[@]}" \
-    --env HTTP_PROXY \
-    --env http_proxy \
-    --env HTTPS_PROXY \
-    --env https_proxy \
-    --env FTP_PROXY \
-    --env ftp_proxy \
-    --env NO_PROXY \
-    --env no_proxy
-  if [[ "$default_port" != "false" ]]; then
-    cp /build/cnb.Dockerfile Dockerfile
-    docker build \
-      --build-arg source_image=tmp-cnb-image \
-      --build-arg default_port="${default_port}" \
-      --tag "$image_tagged" \
-      --tag "$image_latest" \
-      .
-  else
-    docker tag tmp-cnb-image "$image_tagged"
-    docker tag tmp-cnb-image "$image_latest"
-  fi
-  docker push "$image_tagged"
-  docker push "$image_latest"
-  gl_write_auto_build_variables_file
-  exit 0
-fi
 
 if [[ -n "${DOCKERFILE_PATH}" ]]; then
   echo "Building Dockerfile-based application using '${DOCKERFILE_PATH}'..."
 else
   export DOCKERFILE_PATH="Dockerfile"
-
-  if [[ -f "${DOCKERFILE_PATH}" ]]; then
-    echo "Building Dockerfile-based application..."
-  else
-    echo "Building Heroku-based application using gliderlabs/herokuish docker image..."
-    erb -T - /build/Dockerfile.erb > "${DOCKERFILE_PATH}"
-  fi
+  echo "Building Dockerfile-based application..."
 fi
 
 if [[ ! -f "${DOCKERFILE_PATH}" ]]; then
