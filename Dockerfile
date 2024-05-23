@@ -13,7 +13,9 @@ RUN mkdir -m777 /usr/local/sbin  && \
     ln -s /usr/bin/podman /usr/bin/docker
 
 COPY build.sh deploy.sh /
-USER deno
+
+# revisit this:
+# USER deno
 
 # NOTE: `nomad` binary needed for other repositories using us for CI/CD - but drop from _our_ webapp.
-CMD rm /usr/local/sbin/nomad  &&  deno eval "import { serve } from 'https://deno.land/std/http/server.ts'; serve(() => new Response('hai'), { port: 5000 })"
+CMD rm /usr/local/sbin/nomad /usr/bin/podman  &&  su deno -c 'deno eval "import { serve } from \"https://deno.land/std/http/server.ts\"; serve(() => new Response(\"hai\"), { port: 5000 })"'
