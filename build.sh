@@ -37,9 +37,6 @@ if ! podman --remote info &>/dev/null; then
   fi
 fi
 
-ls -l /run/podman/podman.sock || echo xxx
-podman --remote info | grep path || sleep 900
-
 if [[ -n "$CI_REGISTRY" && -n "$CI_REGISTRY_USER" ]]; then
   echo "Logging in to GitLab Container Registry with CI credentials..."
   docker_login_filtered "$CI_REGISTRY_USER" "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
@@ -75,7 +72,6 @@ build_args=(
   --cache-from "$image_previous"
   --cache-from "$image_latest"
   -f "$DOCKERFILE_PATH"
-  --build-arg BUILDPACK_URL="$BUILDPACK_URL"
   --build-arg HTTP_PROXY="$HTTP_PROXY"
   --build-arg http_proxy="$http_proxy"
   --build-arg HTTPS_PROXY="$HTTPS_PROXY"
@@ -122,6 +118,8 @@ if [[ -n "$DOCKER_BUILDKIT" && "$DOCKER_BUILDKIT" != "0" ]]; then
       ;;
   esac
 
+  echo xxx "${build_args[@]}"
+
   podman --remote buildx build \
     "${build_args[@]}" \
     --progress=plain \
@@ -131,6 +129,8 @@ else
   podman --remote image pull --quiet "$image_previous" || \
     podman --remote image pull --quiet "$image_latest" || \
     echo "No previously cached image found. The podman build will proceed without using a cached image"
+
+  echo xxx "${build_args[@]}"
 
   podman --remote build "${build_args[@]}" .
 fi
