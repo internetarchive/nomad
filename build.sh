@@ -48,10 +48,12 @@ if [[ -n "$CI_REGISTRY" && -n "$CI_REGISTRY_USER" ]]; then
 fi
 
 
+# xxx seccomp for IA git repos
 build_args=(
   --cache-from "$CI_APPLICATION_REPOSITORY"
   $AUTO_DEVOPS_BUILD_IMAGE_EXTRA_ARGS
   --tag "$image_tagged"
+  --security-opt seccomp=unconfined
 )
 
 if [ "$NOMAD_VAR_SERVERLESS" = "" ]; then
