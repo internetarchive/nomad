@@ -45,11 +45,6 @@ if [[ -n "$CI_REGISTRY" && -n "$CI_REGISTRY_USER" ]]; then
   docker_login_filtered "$CI_REGISTRY_USER" "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
 fi
 
-if [[ -n "$CI_DEPENDENCY_PROXY_SERVER" && -n "$CI_DEPENDENCY_PROXY_USER" ]]; then
-  echo "Logging in to GitLab Dependency proxy with CI credentials..."
-  docker_login_filtered "$CI_DEPENDENCY_PROXY_USER" "$CI_DEPENDENCY_PROXY_PASSWORD" "$CI_DEPENDENCY_PROXY_SERVER"
-fi
-
 image_previous="$CI_APPLICATION_REPOSITORY:$CI_COMMIT_BEFORE_SHA"
 image_tagged="$CI_APPLICATION_REPOSITORY:$CI_APPLICATION_TAG"
 image_latest="$CI_APPLICATION_REPOSITORY:latest"
@@ -130,21 +125,21 @@ if [[ -n "$DOCKER_BUILDKIT" && "$DOCKER_BUILDKIT" != "0" ]]; then
   podman --remote buildx build \
     "${build_args[@]}" \
     --progress=plain \
-    --push \
     . 2>&1
 else
   echo "Attempting to pull a previously built image for use with --cache-from..."
   podman --remote image pull --quiet "$image_previous" || \
     podman --remote image pull --quiet "$image_latest" || \
-    echo "No previously cached image found. The podman --remote build will proceed without using a cached image"
+    echo "No previously cached image found. The podman build will proceed without using a cached image"
 
   podman --remote build "${build_args[@]}" .
-
-  podman --remote push "$image_tagged"
-
-  if [ "$NOMAD_VAR_SERVERLESS" != "" ]; then
-    podman --remote push "$image_latest"
-  fi
 fi
+
+
+podman --remote push "$image_tagged"
+if [ "$NOMAD_VAR_SERVERLESS" != "" ]; then
+  podman --remote push "$image_latest"
+fi
+
 
 gl_write_auto_build_variables_file
