@@ -16,8 +16,8 @@ filter_docker_warning() {
 
 docker_login_filtered() {
   # $1 - username, $2 - password, $3 - registry
-  # this filters the stderr of the `docker login`, without merging stdout and stderr together
-  { echo "$2" | docker login -u "$1" --password-stdin "$3" 2>&1 1>&3 | filter_docker_warning 1>&2; } 3>&1
+  # this filters the stderr of the `podman --remote login`, without merging stdout and stderr together
+  { echo "$2" | podman --remote login -u "$1" --password-stdin "$3" 2>&1 1>&3 | filter_docker_warning 1>&2; } 3>&1
 }
 
 
@@ -30,7 +30,7 @@ else
 fi
 
 
-if ! docker info &>/dev/null; then
+if ! podman --remote info &>/dev/null; then
   if [ -z "$DOCKER_HOST" ] && [ "$KUBERNETES_PORT" ]; then
     # export DOCKER_HOST='tcp://localhost:2375'
     export DOCKER_HOST='unix:///run/podman/podman.sock'
@@ -55,7 +55,7 @@ image_tagged="$CI_APPLICATION_REPOSITORY:$CI_APPLICATION_TAG"
 image_latest="$CI_APPLICATION_REPOSITORY:latest"
 
 function gl_write_auto_build_variables_file() {
-  echo "CI_APPLICATION_TAG=$CI_APPLICATION_TAG@$(docker image inspect --format='{{ index (split (index .RepoDigests 0) "@") 1 }}' "$image_tagged")" > gl-auto-build-variables.env
+  echo "CI_APPLICATION_TAG=$CI_APPLICATION_TAG@$(podman --remote image inspect --format='{{ index (split (index .RepoDigests 0) "@") 1 }}' "$image_tagged")" > gl-auto-build-variables.env
 }
 
 
@@ -123,27 +123,27 @@ if [[ -n "$DOCKER_BUILDKIT" && "$DOCKER_BUILDKIT" != "0" ]]; then
         --cache-to "type=registry,ref=$registry_ref,mode=$cache_mode"
       )
       # the docker-container driver is required for this cache type
-      docker buildx create --use
+      podman --remote buildx create --use
       ;;
   esac
 
-  docker buildx build \
+  podman --remote buildx build \
     "${build_args[@]}" \
     --progress=plain \
     --push \
     . 2>&1
 else
   echo "Attempting to pull a previously built image for use with --cache-from..."
-  docker image pull --quiet "$image_previous" || \
-    docker image pull --quiet "$image_latest" || \
-    echo "No previously cached image found. The docker build will proceed without using a cached image"
+  podman --remote image pull --quiet "$image_previous" || \
+    podman --remote image pull --quiet "$image_latest" || \
+    echo "No previously cached image found. The podman --remote build will proceed without using a cached image"
 
-  docker build "${build_args[@]}" .
+  podman --remote build "${build_args[@]}" .
 
-  docker push "$image_tagged"
+  podman --remote push "$image_tagged"
 
   if [ "$NOMAD_VAR_SERVERLESS" != "" ]; then
-    docker push "$image_latest"
+    podman --remote push "$image_latest"
   fi
 fi
 
