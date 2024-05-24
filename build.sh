@@ -38,7 +38,6 @@ DOCKER_BUILDKIT=1
 
 if ! podman --remote info &>/dev/null; then
   if [ -z "$DOCKER_HOST" ] && [ "$KUBERNETES_PORT" ]; then
-    # export DOCKER_HOST='tcp://localhost:2375'
     export DOCKER_HOST='unix:///run/podman/podman.sock'
   fi
 fi
@@ -68,19 +67,9 @@ if [[ ! -f "${DOCKERFILE_PATH}" ]]; then
   exit 1
 fi
 
-
-# shellcheck disable=SC2206
 build_args=(
   --cache-from "$CI_APPLICATION_REPOSITORY"
   -f "$DOCKERFILE_PATH"
-  --build-arg HTTP_PROXY="$HTTP_PROXY"
-  --build-arg http_proxy="$http_proxy"
-  --build-arg HTTPS_PROXY="$HTTPS_PROXY"
-  --build-arg https_proxy="$https_proxy"
-  --build-arg FTP_PROXY="$FTP_PROXY"
-  --build-arg ftp_proxy="$ftp_proxy"
-  --build-arg NO_PROXY="$NO_PROXY"
-  --build-arg no_proxy="$no_proxy"
   $AUTO_DEVOPS_BUILD_IMAGE_EXTRA_ARGS
   --tag "$image_tagged"
 )
@@ -102,13 +91,20 @@ cache_mode=${AUTO_DEVOPS_BUILD_CACHE_MODE:-max}
 registry_ref=${AUTO_DEVOPS_BUILD_CACHE_REF:-"${CI_APPLICATION_REPOSITORY}:cache"}
 
 
-echo xxx "${build_args[@]}"
+(
+  set -x
+  podman --remote buildx build "${build_args[@]}" --progress=plain . 2>&1
+)
 
-podman --remote buildx build "${build_args[@]}"  --progress=plain . 2>&1
-
-podman --remote push "$image_tagged"
+(
+  set -x
+  podman --remote push "$image_tagged"
+)
 if [ "$NOMAD_VAR_SERVERLESS" != "" ]; then
-  podman --remote push "$image_latest"
+  (
+    set -x
+    podman --remote push "$image_latest"
+  )
 fi
 
 
