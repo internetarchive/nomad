@@ -1,12 +1,17 @@
 #!/bin/bash -e
 
+# Build stage script for Auto-DevOps
+
 # FROM: registry.gitlab.com/internetarchive/auto-build-image/main
 # which was
 # FROM registry.gitlab.com/gitlab-org/cluster-integration/auto-build-image:v1.14.0
 #
 # then pulled the unused heroku/buildpack stuff/clutter
 
-# build stage script for Auto-DevOps
+# Wondering how to do podman-in-podman?  Of course we are.  Here's a minimal example:
+#
+# SOCK=$(sudo podman info |grep -F podman.sock |rev |cut -f1 -d ' ' |rev)
+# podman run --rm --privileged --net=host --cgroupns=host -v $SOCK:$SOCK registry.gitlab.com/internetarchive/nomad/master zsh -c 'podman --remote ps -a'
 
 set -o pipefail
 

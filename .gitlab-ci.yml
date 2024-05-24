@@ -61,23 +61,23 @@ deploy:
 
 deploy-serverless:
   stage: deploy
-  # NOTE: we just need something w/ `docker` cli in it -- use same image we use for [build]
+  # NOTE: we just need something w/ `podman` cli in it -- use same image we use for [build]
   image: registry.gitlab.com/internetarchive/nomad/master
   script:
     - |
       if [[ -n "$CI_REGISTRY" && -n "$CI_REGISTRY_USER" ]]; then
         echo "Logging in to GitLab Container Registry with CI credentials..."
 
-        # this filters stderr of `docker login`, w/o merging stdout & stderr together
+        # this filters stderr of `podman login`, w/o merging stdout & stderr together
         set +x
-        { echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY" 2>&1 1>&3 | ( grep -E -v "^WARNING! Your password will be stored unencrypted in |^Configure a credential helper to remove this warning. See|^https://docs.docker.com/engine/reference/commandline/login/#credentials-store" || true ) 1>&2; } 3>&1
+        { echo "$CI_REGISTRY_PASSWORD" | podman --remote login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY" 2>&1 1>&3 | ( grep -E -v "^WARNING! Your password will be stored unencrypted in |^Configure a credential helper to remove this warning. See|^https://docs.docker.com/engine/reference/commandline/login/#credentials-store" || true ) 1>&2; } 3>&1
       fi
 
       set -x
       image_tagged="$CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG:$CI_COMMIT_SHA"
       image_latest="$CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG:latest"
-      docker tag  $image_tagged $image_latest
-      docker push $image_latest
+      podman --remote tag  $image_tagged $image_latest
+      podman --remote push $image_latest
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: never
