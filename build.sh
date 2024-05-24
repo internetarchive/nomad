@@ -29,6 +29,7 @@ else
   export CI_APPLICATION_TAG=${CI_APPLICATION_TAG:-$CI_COMMIT_TAG}
 fi
 
+DOCKER_BUILDKIT=1
 
 if ! podman --remote info &>/dev/null; then
   if [ -z "$DOCKER_HOST" ] && [ "$KUBERNETES_PORT" ]; then
@@ -42,7 +43,6 @@ if [[ -n "$CI_REGISTRY" && -n "$CI_REGISTRY_USER" ]]; then
   docker_login_filtered "$CI_REGISTRY_USER" "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
 fi
 
-image_previous="$CI_APPLICATION_REPOSITORY:$CI_COMMIT_BEFORE_SHA"
 image_tagged="$CI_APPLICATION_REPOSITORY:$CI_APPLICATION_TAG"
 image_latest="$CI_APPLICATION_REPOSITORY:latest"
 
@@ -63,14 +63,10 @@ if [[ ! -f "${DOCKERFILE_PATH}" ]]; then
   exit 1
 fi
 
-# By default we support DOCKER_BUILDKIT, however it can be turned off
-# by explicitly setting this to an empty string
-DOCKER_BUILDKIT=${DOCKER_BUILDKIT:-1}
 
 # shellcheck disable=SC2206
 build_args=(
-  --cache-from "$image_previous"
-  --cache-from "$image_latest"
+  --cache-from "$CI_APPLICATION_REPOSITORY"
   -f "$DOCKERFILE_PATH"
   --build-arg HTTP_PROXY="$HTTP_PROXY"
   --build-arg http_proxy="$http_proxy"
@@ -95,46 +91,15 @@ if [[ -n "$AUTO_DEVOPS_BUILD_IMAGE_FORWARDED_CI_VARIABLES" ]]; then
   build_args+=(
     --secret "id=auto-devops-build-secrets,src=$build_secret_file_path"
   )
-
-  # Setting build time secrets always requires buildkit
-  DOCKER_BUILDKIT=1
 fi
 
-cache_type=$AUTO_DEVOPS_BUILD_CACHE
 cache_mode=${AUTO_DEVOPS_BUILD_CACHE_MODE:-max}
 registry_ref=${AUTO_DEVOPS_BUILD_CACHE_REF:-"${CI_APPLICATION_REPOSITORY}:cache"}
 
-if [[ -n "$DOCKER_BUILDKIT" && "$DOCKER_BUILDKIT" != "0" ]]; then
-  case "$cache_type" in
-    inline)
-      build_args+=(--cache-to type=inline) ;;
-    registry)
-      build_args+=(
-        --cache-from "$registry_ref"
-        --cache-to "type=registry,ref=$registry_ref,mode=$cache_mode"
-      )
-      # the docker-container driver is required for this cache type
-      podman --remote buildx create --use
-      ;;
-  esac
 
-  echo xxx "${build_args[@]}"
+echo xxx "${build_args[@]}"
 
-  podman --remote buildx build \
-    "${build_args[@]}" \
-    --progress=plain \
-    . 2>&1
-else
-  echo "Attempting to pull a previously built image for use with --cache-from..."
-  podman --remote image pull --quiet "$image_previous" || \
-    podman --remote image pull --quiet "$image_latest" || \
-    echo "No previously cached image found. The podman build will proceed without using a cached image"
-
-  echo xxx "${build_args[@]}"
-
-  podman --remote build "${build_args[@]}" .
-fi
-
+podman --remote buildx build "${build_args[@]}"  --progress=plain . 2>&1
 
 podman --remote push "$image_tagged"
 if [ "$NOMAD_VAR_SERVERLESS" != "" ]; then
