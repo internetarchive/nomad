@@ -25,6 +25,10 @@ docker_login_filtered() {
   { echo "$2" | podman --remote login -u "$1" --password-stdin "$3" 2>&1 1>&3 | filter_docker_warning 1>&2; } 3>&1
 }
 
+gl_write_auto_build_variables_file() {
+  echo "CI_APPLICATION_TAG=$CI_APPLICATION_TAG@$(podman --remote image inspect --format='{{ index (split (index .RepoDigests 0) "@") 1 }}' "$image_tagged")" > gl-auto-build-variables.env
+}
+
 
 if [[ -z "$CI_COMMIT_TAG" ]]; then
   export CI_APPLICATION_REPOSITORY=${CI_APPLICATION_REPOSITORY:-$CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG}
@@ -35,60 +39,36 @@ else
 fi
 
 DOCKER_BUILDKIT=1
-
-if ! podman --remote info &>/dev/null; then
-  if [ -z "$DOCKER_HOST" ] && [ "$KUBERNETES_PORT" ]; then
-    export DOCKER_HOST='unix:///run/podman/podman.sock'
-  fi
-fi
+image_tagged="$CI_APPLICATION_REPOSITORY:$CI_APPLICATION_TAG"
+image_latest="$CI_APPLICATION_REPOSITORY:latest"
 
 if [[ -n "$CI_REGISTRY" && -n "$CI_REGISTRY_USER" ]]; then
   echo "Logging in to GitLab Container Registry with CI credentials..."
   docker_login_filtered "$CI_REGISTRY_USER" "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
 fi
 
-image_tagged="$CI_APPLICATION_REPOSITORY:$CI_APPLICATION_TAG"
-image_latest="$CI_APPLICATION_REPOSITORY:latest"
-
-function gl_write_auto_build_variables_file() {
-  echo "CI_APPLICATION_TAG=$CI_APPLICATION_TAG@$(podman --remote image inspect --format='{{ index (split (index .RepoDigests 0) "@") 1 }}' "$image_tagged")" > gl-auto-build-variables.env
-}
-
-
-if [[ -n "${DOCKERFILE_PATH}" ]]; then
-  echo "Building Dockerfile-based application using '${DOCKERFILE_PATH}'..."
-else
-  export DOCKERFILE_PATH="Dockerfile"
-  echo "Building Dockerfile-based application..."
-fi
-
-if [[ ! -f "${DOCKERFILE_PATH}" ]]; then
-  echo "Unable to find '${DOCKERFILE_PATH}'. Exiting..." >&2
-  exit 1
-fi
 
 build_args=(
   --cache-from "$CI_APPLICATION_REPOSITORY"
-  -f "$DOCKERFILE_PATH"
   $AUTO_DEVOPS_BUILD_IMAGE_EXTRA_ARGS
   --tag "$image_tagged"
 )
 
-if [ "$NOMAD_VAR_SERVERLESS" != "" ]; then
+if [ "$NOMAD_VAR_SERVERLESS" = "" ]; then
   build_args+=(--tag "$image_latest")
 fi
 
+if [[ -n "${DOCKERFILE_PATH}" ]]; then
+  build_args+=(-f "$DOCKERFILE_PATH")
+fi
 
 if [[ -n "$AUTO_DEVOPS_BUILD_IMAGE_FORWARDED_CI_VARIABLES" ]]; then
   build_secret_file_path=/tmp/auto-devops-build-secrets
-  "$(dirname "$0")"/export-build-secrets > "$build_secret_file_path"
+  "$(dirname "$0")"/export-build-secrets > "$build_secret_file_path" # xxx /build/export-build-secrets
   build_args+=(
     --secret "id=auto-devops-build-secrets,src=$build_secret_file_path"
   )
 fi
-
-cache_mode=${AUTO_DEVOPS_BUILD_CACHE_MODE:-max}
-registry_ref=${AUTO_DEVOPS_BUILD_CACHE_REF:-"${CI_APPLICATION_REPOSITORY}:cache"}
 
 
 (
