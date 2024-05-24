@@ -49,6 +49,7 @@ fi
 
 
 # xxx seccomp for IA git repos
+# o/w opening seccomp profile failed: open /etc/containers/seccomp.json: no such file or directory
 build_args=(
   --cache-from "$CI_APPLICATION_REPOSITORY"
   $AUTO_DEVOPS_BUILD_IMAGE_EXTRA_ARGS
@@ -82,7 +83,7 @@ fi
   set -x
   podman --remote push "$image_tagged"
 )
-if [ "$NOMAD_VAR_SERVERLESS" != "" ]; then
+if [ "$NOMAD_VAR_SERVERLESS" = "" ]; then
   (
     set -x
     podman --remote push "$image_latest"
