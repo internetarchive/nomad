@@ -38,7 +38,7 @@ if ! podman --remote info &>/dev/null; then
 fi
 
 ls -l /run/podman/podman.sock || echo xxx
-podman info | grep path || sleep 900
+podman --remote info | grep path || sleep 900
 
 if [[ -n "$CI_REGISTRY" && -n "$CI_REGISTRY_USER" ]]; then
   echo "Logging in to GitLab Container Registry with CI credentials..."
