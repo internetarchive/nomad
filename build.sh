@@ -53,8 +53,8 @@ fi
 build_args=(
   --cache-from "$CI_APPLICATION_REPOSITORY"
   $AUTO_DEVOPS_BUILD_IMAGE_EXTRA_ARGS
-  --tag "$image_tagged"
   --security-opt seccomp=unconfined
+  --tag "$image_tagged"
 )
 
 if [ "$NOMAD_VAR_SERVERLESS" = "" ]; then

@@ -1,7 +1,8 @@
 # NOTE: keep in mind this file is _included_ by _other_ repos, and thus the env var names
 # are not _always_ related to _this_ repo ;-)
 
-# A GitLab group (ideally) or project will need to set [Settings] [CI/CD] [Variables]
+# A GitLab group (ideally) or project that wants to deploy to a nomad cluster,
+# will need to set [Settings] [CI/CD] [Variables]
 #   NOMAD_ADDR
 #   NOMAD_TOKEN
 # to whatever your Nomad cluster was setup to.
