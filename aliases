@@ -121,7 +121,7 @@ function nom-cp() {
     [ $RSYNC ]  &&  ( set -x; rsync "$@" )
 
     # this is a special exception project where we DONT want to ALSO copy file to nomad deploy
-    [ $MAIN ]  &&  [ "$JOB" = "ia-petabox" ]  &&  exit 0
+    [ $MAIN ]  &&  [ "$JOB" = "ia-petabox" ]  &&  [ ! $NOM_CP_PETABOX_MAIN ]  &&  exit 0
   fi
 
 
