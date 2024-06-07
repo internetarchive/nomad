@@ -11,9 +11,6 @@
 # NOTE: very first pipeline, the [build] below will make sure this is created
 image: registry.gitlab.com/internetarchive/nomad/master
 
-variables:
-  DOCKER_BUILDKIT: 1
-
 stages:
   - build
   - test
@@ -24,15 +21,6 @@ stages:
 include:
   # GitLab Auto DevOps' stock CI/CD [build] phase:
   - remote: 'https://gitlab.com/internetarchive/nomad/-/raw/master/build.yml'
-  # NOTE: uho, cant pull this from our self-hosted gitlab runner suddenly 8/11/2022
-  # so copied the remote file below to `build.yml` and changed the main image to:
-  #   registry.gitlab.com/gitlab-org/cluster-integration/auto-build-image
-  # - remote: 'https://gitlab.com/gitlab-org/gitlab/-/raw/master/lib/gitlab/ci/templates/Jobs/Build.gitlab-ci.yml'
-  # @see https://gitlab.com/gitlab-org/cluster-integration/auto-build-image/blob/master/src/build.sh
-  #
-  # NOTE: uho, this got gone 3/2/2022:
-  # - remote: 'https://gitlab.com/gitlab-org/gitlab-foss/-/raw/master/lib/gitlab/ci/templates/Jobs/Build.gitlab-ci.yml'
-
 
 test-ourself:
   stage: test
@@ -62,8 +50,6 @@ deploy:
 
 deploy-serverless:
   stage: deploy
-  # NOTE: we just need something w/ `podman` cli in it -- use same image we use for [build]
-  image: registry.gitlab.com/internetarchive/nomad/master
   script:
     - |
       if [[ -n "$CI_REGISTRY" && -n "$CI_REGISTRY_USER" ]]; then
