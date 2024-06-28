@@ -215,26 +215,27 @@ job "NOMAD_VAR_SLUG" {
   datacenters = ["dc1"]
   namespace = "${var.NAMESPACE}"
 
+  dynamic "update" {
+    for_each = local.service_type
+    content {
+      # https://learn.hashicorp.com/tutorials/nomad/job-rolling-update
+      max_parallel  = 1
+      # https://learn.hashicorp.com/tutorials/nomad/job-blue-green-and-canary-deployments
+      canary = var.COUNT_CANARIES
+      auto_promote  = local.auto_promote
+      min_healthy_time  = "30s"
+      healthy_deadline  = "10m"
+      progress_deadline = "11m"
+      auto_revert   = true
+    }
+  }
+
   dynamic "group" {
     for_each = [ "${var.SLUG}" ]
     labels = ["${group.value}"]
     content {
       count = var.COUNT
 
-      dynamic "update" {
-        for_each = local.service_type
-        content {
-          # https://learn.hashicorp.com/tutorials/nomad/job-rolling-update
-          max_parallel  = 1
-          # https://learn.hashicorp.com/tutorials/nomad/job-blue-green-and-canary-deployments
-          canary = var.COUNT_CANARIES
-          auto_promote  = local.auto_promote
-          min_healthy_time  = "30s"
-          healthy_deadline  = "10m"
-          progress_deadline = "11m"
-          auto_revert   = true
-        }
-      }
       restart {
         attempts = 3
         delay    = "15s"
