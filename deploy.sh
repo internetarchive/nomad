@@ -19,6 +19,7 @@ function main() {
     NOMAD_ADDR=${NOMAD_ADDR:-""}
     NOMAD_TOKEN_PROD=${NOMAD_TOKEN_PROD:-""}
     NOMAD_TOKEN_STAGING=${NOMAD_TOKEN_STAGING:-""}
+    NOMAD_TOKEN_EXT=${NOMAD_TOKEN_EXT:-""}
     PRIVATE_REPO=${PRIVATE_REPO:-""}
   fi
 
@@ -35,31 +36,36 @@ function main() {
     BASE_DOMAIN="$KUBE_INGRESS_BASE_DOMAIN"
   fi
 
-  MAIN_OR_PROD_OR_STAGING=
-  MAIN_OR_PROD_OR_STAGING_SLUG=
-  STAGING=
+  MAIN_OR_PROD_OR_STAGING_OR_EXT=
+  MAIN_OR_PROD_OR_STAGING_OR_EXT_SLUG=
   PRODUCTION=
+  STAGING=
+  EXT=
   if [ "$CI_COMMIT_REF_SLUG" = "main" -o "$CI_COMMIT_REF_SLUG" = "master" ]; then
-    MAIN_OR_PROD_OR_STAGING=1
-    MAIN_OR_PROD_OR_STAGING_SLUG=1
+    MAIN_OR_PROD_OR_STAGING_OR_EXT=1
+    MAIN_OR_PROD_OR_STAGING_OR_EXT_SLUG=1
   elif [ "$CI_COMMIT_REF_SLUG" = "production" ]; then
     PRODUCTION=1
-    MAIN_OR_PROD_OR_STAGING=1
-    MAIN_OR_PROD_OR_STAGING_SLUG=1
+    MAIN_OR_PROD_OR_STAGING_OR_EXT=1
+    MAIN_OR_PROD_OR_STAGING_OR_EXT_SLUG=1
   elif [ "$BASE_DOMAIN" = "prod.archive.org" ]; then
     # NOTE: this is _very_ unusual -- but it's where a repo can elect to have
     # another branch name (not `production`) deploy to production cluster via (typically) various
     # gitlab CI/CD variables pegged to that branch name.
     PRODUCTION=1
-    MAIN_OR_PROD_OR_STAGING=1
+    MAIN_OR_PROD_OR_STAGING_OR_EXT=1
   elif [ "$CI_COMMIT_REF_SLUG" = "staging" ]; then
     STAGING=1
-    MAIN_OR_PROD_OR_STAGING=1
-    MAIN_OR_PROD_OR_STAGING_SLUG=1
+    MAIN_OR_PROD_OR_STAGING_OR_EXT=1
+    MAIN_OR_PROD_OR_STAGING_OR_EXT_SLUG=1
+  elif [ "$CI_COMMIT_REF_SLUG" = "ext" ]; then
+    EXT=1
+    MAIN_OR_PROD_OR_STAGING_OR_EXT=1
+    MAIN_OR_PROD_OR_STAGING_OR_EXT_SLUG=1
   fi
 
 
-  # some archive.org specific production/staging deployment detection & var updates first
+  # some archive.org specific production/staging/ext deployment detection & var updates first
   if [[ "$BASE_DOMAIN" == *.archive.org ]]; then
     if [ $PRODUCTION ]; then
       export BASE_DOMAIN=prod.archive.org
@@ -68,6 +74,8 @@ function main() {
       fi
     elif [ $STAGING ]; then
       export BASE_DOMAIN=staging.archive.org
+    elif [ $EXT ]; then
+      export BASE_DOMAIN=ext.archive.org
     fi
 
     if [ $PRODUCTION ]; then
@@ -83,6 +91,11 @@ function main() {
         export NOMAD_TOKEN="$NOMAD_TOKEN_STAGING"
         echo using nomad staging token
       fi
+    elif [ $EXT ]; then
+      if [ "$NOMAD_TOKEN_EXT" != "" ]; then
+        export NOMAD_TOKEN="$NOMAD_TOKEN_EXT"
+        echo using nomad ext token
+      fi
     fi
   fi
 
@@ -90,9 +103,10 @@ function main() {
 
 
   # Make a nice "slug" that is like [GROUP]-[PROJECT]-[BRANCH], each component also "slugged",
-  # where "-main", "-master", "-production", "-staging" are omitted. Respect DNS 63 max chars limit.
+  # where "-main", "-master", "-production", "-staging", "-ext" are omitted.
+  # Respect DNS 63 max chars limit.
   export BRANCH_PART=""
-  if [ ! $MAIN_OR_PROD_OR_STAGING_SLUG ]; then
+  if [ ! $MAIN_OR_PROD_OR_STAGING_OR_EXT_SLUG ]; then
     export BRANCH_PART="-${CI_COMMIT_REF_SLUG}"
   fi
   export NOMAD_VAR_SLUG=$(echo "${CI_PROJECT_PATH_SLUG}${BRANCH_PART}" |cut -b1-63)
@@ -103,7 +117,7 @@ function main() {
   # review app, then use them and log during [deploy] phase the first hostname in the list
   export HOSTNAME="${NOMAD_VAR_SLUG}.${BASE_DOMAIN}"
   # NOTE: YAML or CI/CD Variable `NOMAD_VAR_HOSTNAMES` is *IGNORED* -- and automatic $HOSTNAME above
-  #       is used for branches not main/master/production/staging
+  #       is used for branches not main/master/production/staging/ext
 
   # make even nicer names for archive.org processing cluster deploys
   if [ "$BASE_DOMAIN" = "work.archive.org" ]; then
@@ -123,12 +137,12 @@ function main() {
     export NOMAD_VAR_HOSTNAMES=$(deno eval 'const fqdns = JSON.parse(Deno.env.get("NOMAD_VAR_HOSTNAMES")).map((e) => e.includes(".") ? e : e.concat(".").concat(Deno.env.get("BASE_DOMAIN"))); console.log(fqdns)')
   fi
 
-  if [ "$MAIN_OR_PROD_OR_STAGING"  -a  "$NOMAD_VAR_HOSTNAMES" != "" ]; then
+  if [ "$MAIN_OR_PROD_OR_STAGING_OR_EXT"  -a  "$NOMAD_VAR_HOSTNAMES" != "" ]; then
     export HOSTNAME=$(echo "$NOMAD_VAR_HOSTNAMES" |cut -f1 -d, |tr -d '[]" ' |tr -d "'")
   else
     NOMAD_VAR_HOSTNAMES=
 
-    if [ "$PRODUCTION"  -o  "$STAGING" ]; then
+    if [ "$PRODUCTION"  -o  "$STAGING"  -o  "$EXT" ]; then
       export HOSTNAME="${CI_PROJECT_NAME}.$BASE_DOMAIN"
     fi
   fi
@@ -275,6 +289,7 @@ function github-setup() {
   #   NOMAD_TOKEN
   #   NOMAD_TOKEN_PROD (optional)
   #   NOMAD_TOKEN_STAGING (optional)
+  #   NOMAD_TOKEN_EXT (optional)
 
   # You may override the defaults via passed-in args from your repository:
   #   BASE_DOMAIN
@@ -319,7 +334,7 @@ function github-setup() {
 
   # see if we should do nothing
   if [ "$NOMAD_VAR_NO_DEPLOY" ]; then exit 0; fi
-  if [ "$NOMAD_TOKEN" = "" -a "$NOMAD_TOKEN_PROD" = "" -a "$NOMAD_TOKEN_STAGING" = "" ]; then exit 0; fi
+  if [ "${NOMAD_TOKEN}${NOMAD_TOKEN_PROD}${NOMAD_TOKEN_STAGING}${NOMAD_TOKEN_EXT}" = "" ]; then exit 0; fi
 }
 
 
