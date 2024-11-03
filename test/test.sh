@@ -163,6 +163,19 @@ function prodtest() {
   ctags '[["https://canary-plausible.prod.archive.org"]]'
 )
 (
+  banner GL to ext
+  BASE_DOMAIN=dev.archive.org
+  CI_PROJECT_NAME=av
+  CI_COMMIT_REF_SLUG=ext
+  CI_PROJECT_PATH_SLUG=www-$CI_PROJECT_NAME
+  NOMAD_TOKEN_EXT=test
+  expects 'nomad cluster https://ext.archive.org' \
+          'deploying to https://av.ext.archive.org' \
+          'using nomad ext token'
+  tags '[["https://av.ext.archive.org"]]'
+  ctags '[["https://canary-av.ext.archive.org"]]'
+)
+(
   banner GL to prod, custom hostname
   BASE_DOMAIN=dev.archive.org
   CI_PROJECT_NAME=plausible
