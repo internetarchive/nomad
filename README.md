@@ -294,20 +294,20 @@ Setting up your repo to deploy to ext is easy!
 Other alternatives:
 - have DNS domain you can point to a VM?
   - nomad/consul with $5/mo VM (or on-prem)
-    - [[1/2] Setup GitLab, Nomad, Consul & Fabio](https://archive.org/~tracey/slides/devops/2021-03-31)
-    - [[2/2] Add GitLab Runner & Setup full CI/CD pipelines](https://archive.org/~tracey/slides/devops/2021-04-07)
+    - [[1/2] Setup GitLab, Nomad, Consul & Fabio](https://tracey.archive.org/devops/2021-03-31)
+    - [[2/2] Add GitLab Runner & Setup full CI/CD pipelines](https://tracey.archive.org/devops/2021-04-07)
 - have DNS domain and want on-prem GitLab?
   - nomad/consul/gitlab/runners with $20/mo VM (or on-prem)
-    - [[1/2] Setup GitLab, Nomad, Consul & Fabio](https://archive.org/~tracey/slides/devops/2021-03-31)
-    - [[2/2] Add GitLab Runner & Setup full CI/CD pipelines](https://archive.org/~tracey/slides/devops/2021-04-07)
+    - [[1/2] Setup GitLab, Nomad, Consul & Fabio](https://tracey.archive.org/devops/2021-03-31)
+    - [[2/2] Add GitLab Runner & Setup full CI/CD pipelines](https://tracey.archive.org/devops/2021-04-07)
 - no DNS - run on mac/linux laptop?
-  - [[1/3] setup GitLab & GitLab Runner on your Mac](https://archive.org/~tracey/slides/devops/2021-02-17)
-  - [[2/3] setup Nomad & Consul on your Mac](https://archive.org/~tracey/slides/devops/2021-02-24)
-  - [[3/3] connect: GitLab, GitLab Runner, Nomad & Consul](https://archive.org/~tracey/slides/devops/2021-03-10)
+  - [[1/3] setup GitLab & GitLab Runner on your Mac](https://tracey.archive.org/devops/2021-02-17)
+  - [[2/3] setup Nomad & Consul on your Mac](https://tracey.archive.org/devops/2021-02-24)
+  - [[3/3] connect: GitLab, GitLab Runner, Nomad & Consul](https://tracey.archive.org/devops/2021-03-10)
 
 
 # Monitoring GUI urls (via ssh tunnelling above)
-![Cluster Overview](https://archive.org/~tracey/slides/images/nomad-ui4.jpg)
+![Cluster Overview](https://tracey.archive.org/images/nomad-ui4.jpg)
 - nomad really nice overview (see `Topology` link ☝)
   - https://[NOMAD-HOST]:4646 (eg: `$NOMAD_ADDR`)
   - then enter your `$NOMAD_TOKEN`
