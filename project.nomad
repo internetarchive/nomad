@@ -331,7 +331,7 @@ job "NOMAD_VAR_SLUG" {
             ports = local.ports_docker
             volumes = local.volumes
             force_pull = var.FORCE_PULL
-            # memory_hard_limit = "${var.MEMORY * 10}" # not podman driver compatible
+            memory_hard_limit = "${var.MEMORY * 10}" # NOTE: not podman driver compatible
           }
         }
         dynamic "config" {
@@ -343,7 +343,7 @@ job "NOMAD_VAR_SLUG" {
             ports = local.ports_docker
             volumes = local.volumes
             force_pull = var.FORCE_PULL
-            # memory_hard_limit = "${var.MEMORY * 10}" # not podman driver compatible
+            memory_hard_limit = "${var.MEMORY * 10}" # NOTE: not podman driver compatible
 
             auth {
               # server_address = "${var.CI_REGISTRY}"

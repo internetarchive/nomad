@@ -220,9 +220,11 @@ function main() {
   sed -ix "s/NOMAD_VAR_SLUG/$NOMAD_VAR_SLUG/" project.hcl
 
   case "$NOMAD_ADDR" in
-    https://etc.archive.org|https://work.archive.org|https://hind.archive.org|https://dev.archive.org|https://ext.archive.org)
+    https://work.archive.org|https://hind.archive.org|https://dev.archive.org|https://ext.archive.org)
       # HinD cluster(s) use `podman` driver instead of `docker`
-      sed -ix 's/driver\s*=\s*"docker"/driver="podman"/'  project.hcl;; # xxx
+      sed -ix 's/driver\s*=\s*"docker"/driver="podman"/'  project.hcl # xxx
+      sed -ix 's/memory_hard_limit/# memory_hard_limit/'  project.hcl # xxx
+      ;;
   esac
 
   verbose "Handling NOMAD_SECRETS."
