@@ -1,0 +1,11 @@
+{
+    admin off
+}
+
+# We answer all requests with the contents of this file:
+#   https://raw.githubusercontent.com/internetarchive/nomad/refs/heads/master/.gitlab-ci.yml
+
+:5000 {
+	rewrite * /internetarchive/nomad/refs/heads/master/.gitlab-ci.yml
+	reverse_proxy https://raw.githubusercontent.com
+}
