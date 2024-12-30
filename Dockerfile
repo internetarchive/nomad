@@ -8,14 +8,15 @@ RUN mkdir -m777 /usr/local/sbin  && \
     rm        nomad.zip  && \
     chmod 777 nomad && \
     # podman for build.sh
-    apk add bash zsh jq podman && \
+    apk add bash zsh jq podman caddy && \
     # using podman not docker
     ln -s /usr/bin/podman /usr/bin/docker
 
+WORKDIR /app
+COPY gitlab.yml Caddyfile ./
+
 COPY build.sh deploy.sh /
 
-# revisit this:
-# USER deno
+USER deno
 
-# NOTE: `nomad` binary needed for other repositories using us for CI/CD - but drop from _our_ webapp.
-CMD rm /usr/local/sbin/nomad /usr/bin/podman  &&  su deno -c 'deno eval "import { serve } from \"https://deno.land/std/http/server.ts\"; serve(() => new Response(\"hai\"), { port: 5000 })"'
+CMD ["/usr/sbin/caddy", "run"]
