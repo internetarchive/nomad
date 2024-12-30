@@ -2,10 +2,14 @@
     admin off
 }
 
-# We answer all requests with the contents of this file:
-#   https://internetarchive.github.io/nomad/ci.yml
-
 :5000 {
-	rewrite * /nomad/ci.yml
-	reverse_proxy https://internetarchive.github.io
+    # We answer all requests with the contents of this file:
+    #   https://internetarchive.github.io/nomad/ci.yml
+    rewrite * /nomad/ci.yml
+
+    reverse_proxy {
+        to https://internetarchive.github.io
+        # like CLI `--change-host-header`:
+        header_up Host {upstream_hostport}
+    }
 }
