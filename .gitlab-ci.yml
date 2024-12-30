@@ -1,0 +1,113 @@
+# NOTE: keep in mind this file is _included_ by _other_ repos, and thus the env var names
+# are not _always_ related to _this_ repo ;-)
+
+# A GitLab group (ideally) or project that wants to deploy to a nomad cluster,
+# will need to set [Settings] [CI/CD] [Variables]
+#   NOMAD_ADDR
+#   NOMAD_TOKEN
+# to whatever your Nomad cluster was setup to.
+
+
+# NOTE: very first pipeline, the [build] below will make sure this is created
+image: registry.gitlab.com/internetarchive/nomad/master
+
+stages:
+  - build
+  - test
+  - deploy
+  - cleanup
+
+build:
+  # Tracey 3/2024:
+  # This was adapted & simplified from:
+  # https://gitlab.com/gitlab-org/gitlab/-/raw/master/lib/gitlab/ci/templates/Jobs/Build.gitlab-ci.yml
+  stage: build
+  # If need to rebuild this image while runners are down, `cd` to this directory, then, as root:
+  #   podman login registry.gitlab.com
+  #   podman build --net=host --tag registry.gitlab.com/internetarchive/nomad/master . && sudo podman push registry.gitlab.com/internetarchive/nomad/master
+  image: registry.gitlab.com/internetarchive/nomad/master
+  variables:
+    DOCKER_HOST: 'unix:///run/podman/podman.sock'
+    DOCKER_TLS_CERTDIR: ''
+    DOCKER_BUILDKIT: 1
+  script:
+    - /build.sh
+  artifacts:
+    reports:
+      dotenv: gl-auto-build-variables.env
+  rules:
+    - if: '$BUILD_DISABLED'
+      when: never
+    - if: '$CI_COMMIT_TAG || $CI_COMMIT_BRANCH'
+
+test-ourself:
+  stage: test
+  image: ${CI_REGISTRY_IMAGE}/${CI_COMMIT_REF_SLUG}:${CI_COMMIT_SHA}
+  script:
+    - env -i zsh -euax test/test.sh
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_PROJECT_PATH_SLUG == "internetarchive-nomad"'
+
+deploy:
+  stage: deploy
+  script:
+    # https://gitlab.com/internetarchive/nomad/-/blob/master/deploy.sh
+    - /deploy.sh
+  environment:
+    name: $CI_COMMIT_REF_SLUG
+    url: https://$HOSTNAME
+    on_stop: stop_review
+  rules:
+    - if: '$NOMAD_VAR_NO_DEPLOY'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_COMMIT_TAG || $CI_COMMIT_BRANCH'
+
+deploy-serverless:
+  stage: deploy
+  script:
+    - |
+      if [[ -n "$CI_REGISTRY" && -n "$CI_REGISTRY_USER" ]]; then
+        echo "Logging in to GitLab Container Registry with CI credentials..."
+
+        # this filters stderr of `podman login`, w/o merging stdout & stderr together
+        set +x
+        { echo "$CI_REGISTRY_PASSWORD" | podman --remote login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY" 2>&1 1>&3 | ( grep -E -v "^WARNING! Your password will be stored unencrypted in |^Configure a credential helper to remove this warning. See|^https://docs.docker.com/engine/reference/commandline/login/#credentials-store" || true ) 1>&2; } 3>&1
+      fi
+
+      set -x
+      image_tagged="$CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG:$CI_COMMIT_SHA"
+      image_latest="$CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG:latest"
+      podman --remote tag  $image_tagged $image_latest
+      podman --remote push $image_latest
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH && $NOMAD_VAR_SERVERLESS'
+
+
+stop_review:
+  # See:
+  # https://gitlab.com/gitlab-org/gitlab-foss/blob/master/lib/gitlab/ci/templates/Jobs/Deploy.gitlab-ci.yml
+  stage: cleanup
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - /deploy.sh stop
+  environment:
+    name: $CI_COMMIT_REF_SLUG
+    action: stop
+  dependencies: []
+  allow_failure: true
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == "master"'
+      when: never
+    - if: '$NOMAD_VAR_NO_DEPLOY'
+      when: never
+    - if: '$CI_COMMIT_TAG || $CI_COMMIT_BRANCH'
+      when: manual
