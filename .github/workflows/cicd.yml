@@ -6,5 +6,6 @@ jobs:
     with:
       NOMAD_VAR_HOSTNAMES: '["nomad","nomad.archive.org"]'
       NOMAD_VAR_MEMORY: 100 # xxx
+      NOMAD_VAR_CHECK_PROTOCOL: 'tcp'
     secrets:
       NOMAD_TOKEN_EXT: ${{ secrets.NOMAD_TOKEN_EXT }}
