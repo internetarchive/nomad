@@ -2,7 +2,7 @@
     admin off
 }
 
-:8888 {
+:5000 {
     # We answer all requests this CI/CD yaml file from this repo
     file_server
     rewrite * /.gitlab-ci.yml

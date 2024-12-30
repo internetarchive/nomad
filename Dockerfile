@@ -19,4 +19,4 @@ COPY build.sh deploy.sh /
 
 USER deno
 
-CMD ["/usr/bin/caddy", "run"]
+CMD ["/usr/sbin/caddy", "run"]
