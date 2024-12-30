@@ -29,8 +29,14 @@ Uses:
 - simply make your project have this simple `.gitlab-ci.yml` in top-level dir:
 ```yaml
 include:
-  - remote: 'https://gitlab.com/internetarchive/nomad/-/raw/master/.gitlab-ci.yml'
+  - remote: 'https://nomad.archive.org'
 ```
+*OR*
+```yaml
+include:
+  - remote: 'https://raw.githubusercontent.com/internetarchive/nomad/refs/heads/main/gitlab.yml'
+```
+
 - if you want a [test] phase, you can add this to the `.gitlab-ci.yml` file above:
 ```yaml
 test:
