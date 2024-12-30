@@ -2,14 +2,8 @@
     admin off
 }
 
-:5000 {
-    # We answer all requests with the contents of this file:
-    #   https://internetarchive.github.io/nomad/ci.yml
-    rewrite * /nomad/ci.yml
-
-    reverse_proxy {
-        to https://internetarchive.github.io
-        # like CLI `--change-host-header`:
-        header_up Host {upstream_hostport}
-    }
+:8888 {
+    # We answer all requests this CI/CD yaml file from this repo
+    file_server
+    rewrite * /.gitlab-ci.yml
 }
