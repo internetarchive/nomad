@@ -10,3 +10,4 @@ jobs:
       BASE_DOMAIN: 'ext.archive.org'
     secrets:
       NOMAD_TOKEN_EXT: ${{ secrets.NOMAD_TOKEN_EXT }}
+      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}

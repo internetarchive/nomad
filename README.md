@@ -1,9 +1,7 @@
 Code, setup, and information to:
-- setup automatic deployment to Nomad clusters from GitLab's standard CI/CD pipelines
+- setup automatic deployment to Nomad clusters from GitHub & GitLab CI/CD pipelines
 - interact with, monitor, and customize deployments
 
-
-[[_TOC_]]
 
 # GitHub Overview
 We have a https://github.com/internetarchive/cicd repo that uses GitHub Actions reusable workflows for full CI/CD pipelines.
