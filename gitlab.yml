@@ -25,7 +25,6 @@ build:
   # If need to rebuild this image while runners are down, `cd` to this directory, then, as root:
   #   podman login ghcr.io
   #   podman build --net=host --tag ghcr.io/internetarchive/nomad:main . && sudo podman push ghcr.io/internetarchive/nomad:main
-  image: ghcr.io/internetarchive/nomad:main
   variables:
     DOCKER_HOST: 'unix:///run/podman/podman.sock'
     DOCKER_TLS_CERTDIR: ''

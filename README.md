@@ -32,7 +32,7 @@ Uses:
 - simply make your project have this simple `.gitlab-ci.yml` in top-level dir:
 ```yaml
 include:
-  - remote: 'https://nomad.archive.org'
+  - remote: 'https://nomad.archive.org/ci.yml'
 ```
 *OR*
 ```yaml

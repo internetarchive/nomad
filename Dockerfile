@@ -17,6 +17,7 @@ COPY gitlab.yml Caddyfile ./
 
 COPY build.sh deploy.sh /
 
-USER deno
+# revisit this:
+# USER deno
 
 CMD ["/usr/sbin/caddy", "run"]
