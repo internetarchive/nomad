@@ -184,7 +184,7 @@ function main() {
     cp "$REPODIR/project.nomad" project.nomad
   else
     rm -f project.nomad
-    wget -q https://gitlab.com/internetarchive/nomad/-/raw/master/project.nomad
+    wget -q https://raw.githubusercontent.com/internetarchive/nomad/refs/heads/main/project.nomad
   fi
 
   verbose "Replacing variables internal to project.nomad."

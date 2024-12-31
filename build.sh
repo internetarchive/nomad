@@ -11,7 +11,7 @@
 # Wondering how to do podman-in-podman?  Of course we are.  Here's a minimal example:
 #
 # SOCK=$(sudo podman info |grep -F podman.sock |rev |cut -f1 -d ' ' |rev)
-# podman run --rm --privileged --net=host --cgroupns=host -v $SOCK:$SOCK registry.gitlab.com/internetarchive/nomad/master zsh -c 'podman --remote ps -a'
+# podman run --rm --privileged --net=host --cgroupns=host -v $SOCK:$SOCK ghcr.io/internetarchive/nomad:main zsh -c 'podman --remote ps -a'
 
 set -o pipefail
 

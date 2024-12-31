@@ -6,7 +6,7 @@ Code, setup, and information to:
 [[_TOC_]]
 
 
-# Overview
+# GitLab Overview
 Deployment leverages a simple `.gitlab-ci.yml` using GitLab runners & CI/CD ([build] and [test]);
 then switches to custom [deploy] phase to deploy docker containers into `nomad`.
 
@@ -46,7 +46,7 @@ test:
     - cd /app   # or wherever in your image
     - npm test  # or whatever your test scripts/steps are
 ```
-- [optional] you can _instead_ copy [the included file](.gitlab-ci.yml) and customize/extend it.
+- [optional] you can _instead_ copy [the included file](gitlab.yml) and customize/extend it.
 - [optional] you can copy this [project.nomad](project.nomad) file into your repo top level and customize/extend it if desired
 - _... but there's a good chance you won't need to_ 😎
 
@@ -78,7 +78,7 @@ NOMAD_VAR_VOLUMES
 ```
 - See the top of [project.nomad](project.nomad)
 - Our customizations always prefix with `NOMAD_VAR_`.
-- You can simply insert them, with values, in your project's `.gitlab-ci.yml` file before including _our_ `.gitlab-ci.yml` like above.
+- You can simply insert them, with values, in your project's `.gitlab-ci.yml` file before including _our_ [gitlab.yml](gitlab.yml) like above.
 - Examples 👇
 #### Don't actually deploy containers to nomad
 Perhaps your project just wants to leverage the CI (Continuous Integration) for [buil] and/or [test] steps - but not CD (Continuous Deployment).  An example might be a back-end container that runs elsewhere and doesn't have web listener.
@@ -283,7 +283,7 @@ Setting up your repo to deploy to ext is easy!
   - `brew install nomad`
   - `source $HOME/.config/nomad`
     - better yet:
-      - `git clone https://gitlab.com/internetarchive/nomad`
+      - `git clone https://github.com/internetarchive/nomad`
       - adjust next line depending on where you checked out the above repo
       - add this to your `$HOME/.bash_profile` or `$HOME/.zshrc` etc.
         - `FI=$HOME/nomad/aliases  &&  [ -e $FI ]  &&  source $FI`
@@ -404,7 +404,7 @@ variables:
   NOMAD_VAR_COUNT_CANARIES: 0
 
 include:
-  - remote: 'https://gitlab.com/internetarchive/nomad/-/raw/master/.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/internetarchive/nomad/refs/heads/main/gitlab.yml'
 ```
 `vars.nomad`:
 ```ini

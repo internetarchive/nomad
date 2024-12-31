@@ -16,7 +16,7 @@ variables {
   CI_REGISTRY_READ_TOKEN = ""                               # preferred name
 
 
-  # This autogenerates from https://gitlab.com/internetarchive/nomad/-/blob/master/.gitlab-ci.yml
+  # This autogenerates from https://github.com/internetarchive/nomad/blob/main/gitlab.yml
   # & normally has "-$CI_COMMIT_REF_SLUG" appended, but is omitted for "main" or "master" branches.
   # You should not change this.
   SLUG = "internetarchive-bai"
@@ -107,7 +107,7 @@ variable "PORTS" {
 }
 
 variable "HOSTNAMES" {
-  # This autogenerates from https://gitlab.com/internetarchive/nomad/-/blob/master/.gitlab-ci.yml
+  # This autogenerates from https://github.com/internetarchive/nomad/blob/main/gitlab.yml
   # but you can override to 1 or more custom hostnames if desired, eg:
   #   NOMAD_VAR_HOSTNAMES='["www.example.com", "site.example.com"]'
   type = list(string)
