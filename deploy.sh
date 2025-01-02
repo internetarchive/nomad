@@ -219,13 +219,16 @@ function main() {
   # Do the one current substitution nomad v1.0.3 can't do now (apparently a bug)
   sed -ix "s/NOMAD_VAR_SLUG/$NOMAD_VAR_SLUG/" project.hcl
 
-  case "$NOMAD_ADDR" in
-    https://work.archive.org|https://hind.archive.org|https://dev.archive.org|https://ext.archive.org)
-      # HinD cluster(s) use `podman` driver instead of `docker`
-      sed -ix 's/driver\s*=\s*"docker"/driver="podman"/'  project.hcl # xxx
-      sed -ix 's/memory_hard_limit/# memory_hard_limit/'  project.hcl # xxx
-      ;;
-  esac
+  if [[ "$NOMAD_ADDR" == *.archive.org ]]; then
+    local NA=$(echo "$NOMAD_ADDR" |cut -f1 -d. |sed 's=^https://==')
+    case "$NA" in
+      work|hind|dev|ext|books-loki)
+        # HinD cluster(s) use `podman` driver instead of `docker`
+        sed -ix 's/driver\s*=\s*"docker"/driver="podman"/'  project.hcl # xxx
+        sed -ix 's/memory_hard_limit/# memory_hard_limit/'  project.hcl # xxx
+        ;;
+    esac
+  fi
 
   verbose "Handling NOMAD_SECRETS."
   if [ "$NOMAD_SECRETS" = "" ]; then
