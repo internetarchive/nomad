@@ -92,16 +92,12 @@ variable "PORTS" {
   #       Don't worry -- we'll use the abs() of it;
   #       negative numbers makes them easily identifiable and partition-able below ;-)
   #
-  # Note: if you want an extra port to only use HTTP and not HTTPS, add 10000 to your desired
-  #       port number (so for 18989, the public url will be http://...  mapped internally to :8989 ).
-  #
   # Examples:
   #   NOMAD_VAR_PORTS='{ 5000 = "http" }'
   #   NOMAD_VAR_PORTS='{ -1 = "http" }'
   #   NOMAD_VAR_PORTS='{ 5000 = "http", 666 = "cool-ness" }'
   #   NOMAD_VAR_PORTS='{ 8888 = "http", 8012 = "backend", 7777 = "extra-service" }'
   #   NOMAD_VAR_PORTS='{ 5000 = "http", -7777 = "irc" }'
-  #   NOMAD_VAR_PORTS='{ 5000 = "http", 18989 = "db" }'
   type = map(string)
   default = { 5000 = "http" }
 }
@@ -131,19 +127,18 @@ variable "NOMAD_SECRETS" {
 locals {
   # Ignore all this.  really :)
 
-  # Copy hashmap, but remove map key/val for the main/default port (defaults to 5000).
-  # Then split hashmap in two: one for HTTP port mappings; one for TCP (only; rare) port mappings.
-  ports_main        = {for k, v in var.PORTS:                 k          => v  if v == "http"}
-  ports_extra_tmp   = {for k, v in var.PORTS:                 k          => v  if v != "http"}
-  ports_extra_tmp2  = {for k, v in local.ports_extra_tmp:     k          => v  if k > -2}
-  ports_extra_https = {for k, v in local.ports_extra_tmp2:    k          => v  if k < 10000}
-  ports_extra_http  = {for k, v in local.ports_extra_tmp: abs(k - 10000) => v  if k > 10000}
-  ports_extra_tcp   = {for k, v in local.ports_extra_tmp: abs(k)         => v  if k < -1}
+  # Split the ports hashmap into three hashmaps:
+  #  - just the key/val for the main/default port (defaults to 5000)
+  #  - extra HTTPS port mappings
+  #  - TCP (only; rare) port mappings
+  ports_main        = {for k, v in var.PORTS:     k  => v  if v == "http"}
+  ports_extra_https = {for k, v in var.PORTS:     k  => v  if v != "http" && k > -2}
+  ports_extra_tcp   = {for k, v in var.PORTS: abs(k) => v  if v != "http" && k < -1}
   # 1st docker container configures all ports *unless* MULTI_CONTAINER is true, then just main port
   ports_docker = values(var.MULTI_CONTAINER ? local.ports_main : var.PORTS)
 
   # Now create a hashmap of *all* ports to be used, but abs() any portnumber key < -1
-  ports_all = merge(local.ports_main, local.ports_extra_https, local.ports_extra_http, local.ports_extra_tcp, {})
+  ports_all = merge(local.ports_main, local.ports_extra_https, local.ports_extra_tcp, {})
 
   # Use CI_GITHUB_IMAGE if set, otherwise use GitLab vars interpolated string
   docker_image = var.CI_GITHUB_IMAGE != "" ? var.CI_GITHUB_IMAGE : "${var.CI_REGISTRY_IMAGE}/${var.CI_COMMIT_REF_SLUG}:${var.CI_COMMIT_SHA}"
@@ -187,9 +182,6 @@ locals {
       # then make its hostname be `card-backend.example.com`
       "urlprefix-${local.host0}-${portname}.${local.host0domain}"
     ]},
-    {for portnum, portname in local.ports_extra_http: portname => [
-      "urlprefix-${local.host0}-${portname}.${local.host0domain} proto=http"
-    ]},
     {for portnum, portname in local.ports_extra_tcp: portname => [
       "urlprefix-:${portnum} proto=tcp"
     ]},
@@ -198,9 +190,6 @@ locals {
       # If the main deploy hostname is `card.example.com`, and a 2nd port is named `backend`,
       # then make its hostname be `card-backend.example.com`
       local.legacy ? "https://${var.HOSTNAMES[0]}:${portnum}" : "https://${local.host0}-${portname}.${local.host0domain}" // xxx
-    ]},
-    {for portnum, portname in local.ports_extra_http: portname => [
-      "http://${local.host0}-${portname}.${local.host0domain}"
     ]},
     {for portnum, portname in local.ports_extra_tcp: portname => []},
   )
@@ -292,7 +281,7 @@ job "NOMAD_VAR_SLUG" {
       }
 
       dynamic "service" {
-        for_each = merge(local.ports_extra_https, local.ports_extra_http, local.ports_extra_tcp)
+        for_each = merge(local.ports_extra_https, local.ports_extra_tcp)
         content {
           # service.key == portnumber
           # service.value == portname

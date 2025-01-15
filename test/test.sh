@@ -230,33 +230,33 @@ function prodtest() {
   slug www-offshoot
 )
 (
-  banner GL repo using one HTTP-only port and 2+ ports/names, to dev
+  banner GL repo using one TCP-only port and 2+ ports/names, to dev
   BASE_DOMAIN=dev.archive.org
   CI_PROJECT_NAME=lcp
   CI_COMMIT_REF_SLUG=main
   CI_PROJECT_PATH_SLUG=services-$CI_PROJECT_NAME
-  NOMAD_VAR_PORTS='{ 9999 = "http" , 18989 = "lcp", 8990 = "lsd" }'
+  NOMAD_VAR_PORTS='{ 9999 = "http" , -8989 = "lcp", 8990 = "lsd" }'
   expects 'nomad cluster https://dev.archive.org' \
           'deploying to https://services-lcp.dev.archive.org'
   # NOTE: subtle -- with multiple ports (one thus one service per port), we expect 3 services
   #       eacho with its own hostname
-  tags '[["https://services-lcp.dev.archive.org"],["http://services-lcp-lcp.dev.archive.org"],["https://services-lcp-lsd.dev.archive.org"]]'
+  tags '[["https://services-lcp.dev.archive.org"],[],["https://services-lcp-lsd.dev.archive.org"]]'
   ctags '[["https://canary-services-lcp.dev.archive.org"]]'
 )
 (
-  banner GL repo using one HTTP-only port and 2+ ports/names, to prod
+  banner GL repo using one TCP-only port and 2+ ports/names, to prod
   BASE_DOMAIN=dev.archive.org
   CI_PROJECT_NAME=lcp
   CI_COMMIT_REF_SLUG=production
   CI_PROJECT_PATH_SLUG=services-$CI_PROJECT_NAME
-  NOMAD_VAR_PORTS='{ 9999 = "http" , 18989 = "lcp", 8990 = "lsd" }'
+  NOMAD_VAR_PORTS='{ 9999 = "http" , -8989 = "lcp", 8990 = "lsd" }'
   NOMAD_TOKEN_PROD=test
   expects 'nomad cluster https://prod.archive.org' \
           'deploying to https://lcp.prod.archive.org' \
           'using nomad production token'
   # NOTE: subtle -- with multiple ports (one thus one service per port), we expect 3 services
   #       eacho with its own hostname
-  tags '[["urlprefix-lcp.prod.archive.org"],["urlprefix-lcp-lcp.prod.archive.org proto=http"],["urlprefix-lcp-lsd.prod.archive.org"]]'
+  tags '[["urlprefix-lcp.prod.archive.org"],["urlprefix-:8989 proto=tcp"],["urlprefix-lcp-lsd.prod.archive.org"]]'
   ctags '[["https://canary-lcp.prod.archive.org"]]'
 )
 (
