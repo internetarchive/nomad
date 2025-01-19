@@ -70,7 +70,7 @@ function main() {
     if [ $PRODUCTION ]; then
       export BASE_DOMAIN=prod.archive.org
       if [[ "$CI_PROJECT_PATH_SLUG" == internetarchive-emularity-* ]]; then
-        export BASE_DOMAIN=ux-b.archive.org
+        export BASE_DOMAIN=.archive.org
       fi
     elif [ $STAGING ]; then
       export BASE_DOMAIN=staging.archive.org
@@ -222,7 +222,7 @@ function main() {
   if [[ "$NOMAD_ADDR" == *.archive.org ]]; then
     local NA=$(echo "$NOMAD_ADDR" |cut -f1 -d. |sed 's=^https://==')
     case "$NA" in
-      work|hind|dev|ext|books-loki)
+      work|hind|dev|ext|books-loki|ux-b)
         # HinD cluster(s) use `podman` driver instead of `docker`
         sed -ix 's/driver\s*=\s*"docker"/driver="podman"/'  project.hcl # xxx
         sed -ix 's/memory_hard_limit/# memory_hard_limit/'  project.hcl # xxx
