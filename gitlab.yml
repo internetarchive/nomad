@@ -1,5 +1,7 @@
-# NOTE: keep in mind this file is _included_ by _other_ repos, and thus the env var names
-# are not _always_ related to _this_ repo ;-)
+# To use this, you can add these 2 lines to a file named: .gitlab-ci.yml
+# at the top-level of your GitLab repo (remove lead '# ' chars):
+#   include:
+#     - remote: 'https://nomad.archive.org/ci.yml'
 
 # A GitLab group (ideally) or project that wants to deploy to a nomad cluster,
 # will need to set [Settings] [CI/CD] [Variables]
@@ -8,7 +10,9 @@
 # to whatever your Nomad cluster was setup to.
 
 
-# NOTE: very first pipeline, the [build] below will make sure this is created
+# NOTE: changes to *this* repo, will fire of GitHub Actions here:
+#   https://github.com/internetarchive/nomad/blob/main/.github/workflows/cicd.yml
+# which will re/make this container image:
 image: ghcr.io/internetarchive/nomad:main
 
 stages:
@@ -22,14 +26,12 @@ build:
   # This was adapted & simplified from:
   # https://gitlab.com/gitlab-org/gitlab/-/raw/master/lib/gitlab/ci/templates/Jobs/Build.gitlab-ci.yml
   stage: build
-  # If need to rebuild this image while runners are down, `cd` to this directory, then, as root:
-  #   podman login ghcr.io
-  #   podman build --net=host --tag ghcr.io/internetarchive/nomad:main . && sudo podman push ghcr.io/internetarchive/nomad:main
   variables:
     DOCKER_HOST: 'unix:///run/podman/podman.sock'
     DOCKER_TLS_CERTDIR: ''
     DOCKER_BUILDKIT: 1
   script:
+    # https://github.com/internetarchive/nomad/blob/main/build.sh
     - /build.sh
   artifacts:
     reports:
@@ -38,16 +40,6 @@ build:
     - if: '$BUILD_DISABLED'
       when: never
     - if: '$CI_COMMIT_TAG || $CI_COMMIT_BRANCH'
-
-test-ourself:
-  stage: test
-  image: ${CI_REGISTRY_IMAGE}/${CI_COMMIT_REF_SLUG}:${CI_COMMIT_SHA}
-  script:
-    - env -i zsh -euax test/test.sh
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: never
-    - if: '$CI_PROJECT_PATH_SLUG == "internetarchive-nomad"'
 
 deploy:
   stage: deploy
@@ -95,6 +87,7 @@ stop_review:
   variables:
     GIT_STRATEGY: none
   script:
+    # https://github.com/internetarchive/nomad/blob/main/deploy.sh
     - /deploy.sh stop
   environment:
     name: $CI_COMMIT_REF_SLUG
