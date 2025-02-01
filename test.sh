@@ -1,9 +1,10 @@
-#!/bin/zsh -euax
+#!/bin/zsh -eu
 
 # Runs various tests.
 
 # Avoid any env vars "leaking" in to this script
-unset $(printenv |cut -f1 -d= |grep -Ev '^PATH$')
+unset $(printenv |cut -f1 -d= |grep -Ev '^PATH|HOME$')
+set -ax
 
 
 function banner() {
