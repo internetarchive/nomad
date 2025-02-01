@@ -2,8 +2,9 @@
 
 # Runs various tests.
 
-# Run like this to avoid any env vars "leaking" in to this script:
-#   env -i zsh -euax ./test/test.sh
+# Avoid any env vars "leaking" in to this script
+unset $(printenv |cut -f1 -d= |grep -Ev '^PATH$')
+
 
 function banner() {
   set +x
