@@ -70,7 +70,7 @@ function main() {
     if [ $PRODUCTION ]; then
       export BASE_DOMAIN=prod.archive.org
       if [[ "$CI_PROJECT_PATH_SLUG" == internetarchive-emularity-* ]]; then
-        export BASE_DOMAIN=.archive.org
+        export BASE_DOMAIN=ux-b.archive.org
       fi
     elif [ $STAGING ]; then
       export BASE_DOMAIN=staging.archive.org
