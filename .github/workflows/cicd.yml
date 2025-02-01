@@ -29,4 +29,4 @@ jobs:
       image: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
     steps:
     - run: which -a zsh
-    - run: sh -ec 'pwd; ls; ./test.sh'
+    - run: sh -ec 'pwd; ls; cd ..; pwd; ls; ./test.sh'
