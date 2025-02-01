@@ -13,7 +13,7 @@ RUN mkdir -m777 /usr/local/sbin  && \
     ln -s /usr/bin/podman /usr/bin/docker
 
 WORKDIR /app
-COPY gitlab.yml Caddyfile ./
+COPY gitlab.yml Caddyfile test.sh deploy.sh ./
 
 COPY build.sh deploy.sh /
 

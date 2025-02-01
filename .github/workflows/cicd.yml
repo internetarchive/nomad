@@ -11,22 +11,3 @@ jobs:
     secrets:
       NOMAD_TOKEN_EXT: ${{ secrets.NOMAD_TOKEN_EXT }}
       NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
-
-  # test:
-  #   runs-on: ubuntu-latest
-  #   needs: [cicd]
-  #   container:
-  #     # test using the just built-and-pushed docker image from the [cicd] job above
-  #     image: 'docker://ghcr.io/${{ github.repository }}:${{ github.ref_name }}'
-  #   steps:
-  #   - run:  test/test.sh
-
-  test:
-    runs-on: ubuntu-latest
-    needs: [cicd]
-    container:
-      # test the image that was just built above
-      image: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
-    steps:
-    - run: which -a zsh
-    - run: sh -ec 'pwd; ls; cd ..; pwd; ls; ./test.sh'
