@@ -260,7 +260,7 @@ function nom-job-from-cwd() {
   JOB=$GROUP_PROJECT
   [ "$SLUG" = "main" -o "$SLUG" = "master" -o "$SLUG" = "staging" -o "$SLUG" = "production" ]  ||  JOB="${JOB}-${SLUG}"
 
-  if [ $NOM_JOB_SUFFIX_RM_EXT ];
+  if [ $NOM_JOB_SUFFIX_RM_EXT ]; then
     JOB=$(echo "$JOB" |perl -pe 's/\-ext$/$1/')
   fi
 
