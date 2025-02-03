@@ -202,7 +202,7 @@ function nom-resubmit() {
   [ $# -eq 1 ]  &&  JOB=$1
   [ $# -ne 1 ]  &&  JOB=$(nom-job-from-cwd)
 
-  nomad inspect ${JOB?} |tee .$JOB
+  nomad inspect ${JOB?} |perl -pe 's/"Stop": true,//' |tee .$JOB
 
   # in case we are trying to _move_ an active/OK deploy
   nomad stop ${JOB?}
@@ -259,6 +259,11 @@ function nom-job-from-cwd() {
 	SLUG=$(echo "$BRANCH" |tr '/_.' '-' |tr A-Z a-z)
   JOB=$GROUP_PROJECT
   [ "$SLUG" = "main" -o "$SLUG" = "master" -o "$SLUG" = "staging" -o "$SLUG" = "production" ]  ||  JOB="${JOB}-${SLUG}"
+
+  if [ $NOM_JOB_SUFFIX_RM_EXT ];
+    JOB=$(echo "$JOB" |perl -pe 's/\-ext$/$1/')
+  fi
+
   echo $(echo "$JOB" |cut -b1-63)
 }
 
