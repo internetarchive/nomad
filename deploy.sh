@@ -109,7 +109,7 @@ function main() {
   if [ ! $MAIN_OR_PROD_OR_STAGING_OR_EXT_SLUG ]; then
     export BRANCH_PART="-${CI_COMMIT_REF_SLUG}"
   fi
-  export NOMAD_VAR_SLUG=$(echo "${CI_PROJECT_PATH_SLUG}${BRANCH_PART}" |cut -b1-63)
+  export NOMAD_VAR_SLUG=$(echo "${CI_PROJECT_PATH_SLUG}${BRANCH_PART}" |cut -b1-63 | sed 's/-$//')
   # make nice (semantic) hostname, based on the slug, eg:
   #   services-timemachine.x.archive.org
   #   ia-petabox-webdev-3939-fix-things.x.archive.org
