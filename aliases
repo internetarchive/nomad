@@ -109,7 +109,7 @@ function nom-cp() {
   done
   echo
 
-  if [ $VSCODE ]; then
+  if [ $VSCODE ] && [ "/$REST" != "${@: -1}" ]; then
     local MAIN=
     [ "$BRANCH" = "main"   ]  &&  MAIN=true
     [ "$BRANCH" = "master" ]  &&  MAIN=true
