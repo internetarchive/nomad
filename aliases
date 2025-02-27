@@ -109,7 +109,8 @@ function nom-cp() {
   done
   echo
 
-  if [ $VSCODE ]; then
+  # If called by VSCode and sync-rsync.sites.remotePath is not "", try to rsync
+  if [ $VSCODE ] && [ "/$REST" != "${@: -1}" ]; then
     local MAIN=
     [ "$BRANCH" = "main"   ]  &&  MAIN=true
     [ "$BRANCH" = "master" ]  &&  MAIN=true
