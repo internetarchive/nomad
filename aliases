@@ -118,7 +118,7 @@ function nom-cp() {
     [   $MAIN ]  &&  RSYNC=true
     [ ! $MAIN ]  &&  [ "$RSYNC_BRANCHES" ]  &&  RSYNC=true
 
-    [ $RSYNC ]  &&  ( set -x; rsync "$@" ) || true
+    [ $RSYNC ] && { set +e; set -x; rsync "$@"; RSYNC_EXIT=$?; set +x; set -e; }
 
     # this is a special exception project where we DONT want to ALSO copy file to nomad deploy
     [ $MAIN ]  &&  [ "$JOB" = "ia-petabox" ]  &&  [ ! $NOM_CP_PETABOX_MAIN ]  &&  exit 0
@@ -135,7 +135,27 @@ function nom-cp() {
   # (and thus hang).  So timeout/kill after 2s :( tracey 2024/3 )
   set +e
   cat "$FILE" | ( set -x; set +e; nomad alloc exec -i -task $TASK "$ALLOC" sh -c "timeout 2 cat >| '$REST'" )
-  echo SUCCESS
+  NOMAD_EXIT=$?
+  # timeout shoud come back with a 143, which we treat as success
+  [ $NOMAD_EXIT -eq 143 ] && NOMAD_EXIT=0
+
+  if [ -n "${RSYNC_EXIT}" ]; then
+    if [ ${RSYNC_EXIT} -ne 0 ]; then
+      echo "Warning: rsync failed with exit code $RSYNC_EXIT"
+    else
+      echo "Info: rsync was successful"
+    fi
+  fi
+
+  if [ $NOMAD_EXIT -ne 0 ]; then
+    echo "Warning: nomad sync failed with exit code $NOMAD_EXIT"
+  else
+    echo "Info: nomad sync was successful"
+  fi
+
+  if [ ${RSYNC_EXIT:-0} -ne 0 ] || [ $NOMAD_EXIT -ne 0 ]; then
+    return 1
+  fi
 }
 
 
