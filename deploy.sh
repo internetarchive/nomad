@@ -252,6 +252,8 @@ EOF
   # or malicious values by only passing through env vars, set by gitlab automation,
   # with known sanitized values.
   # More can be added if/as needed.  list is sorted.
+  stashed_bash_flags=$-
+  set +u
   export NOMAD_VAR_CI_APPLICATION_REPOSITORY="$CI_APPLICATION_REPOSITORY"
   export NOMAD_VAR_CI_APPLICATION_TAG="$CI_APPLICATION_TAG"
   export NOMAD_VAR_CI_BUILDS_DIR="$CI_BUILDS_DIR"
@@ -274,6 +276,10 @@ EOF
   export NOMAD_VAR_CI_REGISTRY_PASSWORD="$CI_REGISTRY_PASSWORD"
   export NOMAD_VAR_CI_REGISTRY_READ_TOKEN="$CI_REGISTRY_READ_TOKEN"
   export NOMAD_VAR_CI_REGISTRY_USER="$CI_REGISTRY_USER"
+  if [[ $stashed_bash_flags =~ u ]]; then
+    # we were being run with `set -u` (fail out if a var is undefined).  we can restore that now.
+    set -u
+  fi
 
 
   if [ "$NOMAD_TOKEN" = test ]; then
