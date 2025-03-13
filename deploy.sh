@@ -246,10 +246,35 @@ NOMAD_SECRETS=$NOMAD_SECRETS
 EOF
   fi
 
+
   verbose "copy current env vars starting with "CI_" to "NOMAD_VAR_CI_" variants & inject them into shell"
-  deno eval 'Object.entries(Deno.env.toObject()).map(([k, v]) => console.log("export NOMAD_VAR_"+k+"="+JSON.stringify(v)))' | grep -E '^export NOMAD_VAR_CI_' >| ci.env
-  source ci.env
-  rm     ci.env
+  # Avoid env vars like commit messages (or possibly commit author) with quotes or weirness
+  # or malicious values by only passing through env vars, set by gitlab automation,
+  # with known sanitized values.
+  # More can be added if/as needed.  list is sorted.
+  export NOMAD_VAR_CI_APPLICATION_REPOSITORY="$CI_APPLICATION_REPOSITORY"
+  export NOMAD_VAR_CI_APPLICATION_TAG="$CI_APPLICATION_TAG"
+  export NOMAD_VAR_CI_BUILDS_DIR="$CI_BUILDS_DIR"
+  export NOMAD_VAR_CI_COMMIT_BRANCH="$CI_COMMIT_BRANCH"
+  export NOMAD_VAR_CI_COMMIT_REF_NAME="$CI_COMMIT_REF_NAME"
+  export NOMAD_VAR_CI_COMMIT_REF_SLUG="$CI_COMMIT_REF_SLUG"
+  export NOMAD_VAR_CI_COMMIT_SHA="$CI_COMMIT_SHA"
+  export NOMAD_VAR_CI_COMMIT_SHORT_SHA="$CI_COMMIT_SHORT_SHA"
+  export NOMAD_VAR_CI_COMMIT_TAG="$CI_COMMIT_TAG"
+  export NOMAD_VAR_CI_CONCURRENT_ID="$CI_CONCURRENT_ID"
+  export NOMAD_VAR_CI_DEFAULT_BRANCH="$CI_DEFAULT_BRANCH"
+  export NOMAD_VAR_CI_GITHUB_IMAGE="$CI_GITHUB_IMAGE"
+  export NOMAD_VAR_CI_HOSTNAME="$CI_HOSTNAME"
+  export NOMAD_VAR_CI_PIPELINE_SOURCE="$CI_PIPELINE_SOURCE"
+  export NOMAD_VAR_CI_PROJECT_DIR="$CI_PROJECT_DIR"
+  export NOMAD_VAR_CI_PROJECT_NAME="$CI_PROJECT_NAME"
+  export NOMAD_VAR_CI_PROJECT_PATH_SLUG="$CI_PROJECT_PATH_SLUG"
+  export NOMAD_VAR_CI_REGISTRY="$CI_REGISTRY"
+  export NOMAD_VAR_CI_REGISTRY_IMAGE="$CI_REGISTRY_IMAGE"
+  export NOMAD_VAR_CI_REGISTRY_PASSWORD="$CI_REGISTRY_PASSWORD"
+  export NOMAD_VAR_CI_REGISTRY_READ_TOKEN="$CI_REGISTRY_READ_TOKEN"
+  export NOMAD_VAR_CI_REGISTRY_USER="$CI_REGISTRY_USER"
+
 
   if [ "$NOMAD_TOKEN" = test ]; then
     nomad run -output -var-file=env.env project.hcl >| project.json
