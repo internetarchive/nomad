@@ -260,7 +260,9 @@ EOF
   # or malicious values by only passing through env vars, set by gitlab automation,
   # with known sanitized values.
   # More can be added if/as needed.  list is sorted.
-  echo "
+  (
+    set +u
+    echo "
 CI_APPLICATION_REPOSITORY='$CI_APPLICATION_REPOSITORY'
 CI_APPLICATION_TAG='$CI_APPLICATION_TAG'
 CI_BUILDS_DIR='$CI_BUILDS_DIR'
@@ -283,7 +285,8 @@ CI_REGISTRY_IMAGE='$CI_REGISTRY_IMAGE'
 CI_REGISTRY_PASSWORD='$CI_REGISTRY_PASSWORD'
 CI_REGISTRY_READ_TOKEN='$CI_REGISTRY_READ_TOKEN'
 CI_REGISTRY_USER='$CI_REGISTRY_USER'
-" >> env.env
+"   >> env.env
+  )
 
 
   if [ "$NOMAD_TOKEN" = test ]; then
