@@ -21,6 +21,8 @@ function main() {
     NOMAD_TOKEN_STAGING=${NOMAD_TOKEN_STAGING:-""}
     NOMAD_TOKEN_EXT=${NOMAD_TOKEN_EXT:-""}
     PRIVATE_REPO=${PRIVATE_REPO:-""}
+    NOMAD_VAR_DEPLOY_WITH_PODMAN=${NOMAD_VAR_DEPLOY_WITH_PODMAN:-""}
+    NOMAD_VAR_LEGACY_SERVICE_NAMES_URLPREFIX=${NOMAD_VAR_LEGACY_SERVICE_NAMES_URLPREFIX:-""}
   fi
 
 
@@ -221,13 +223,19 @@ function main() {
 
   if [[ "$NOMAD_ADDR" == *.archive.org ]]; then
     local NA=$(echo "$NOMAD_ADDR" |cut -f1 -d. |sed 's=^https://==')
+    NOMAD_VAR_DEPLOY_WITH_PODMAN=true
     case "$NA" in
-      work|hind|dev|ext|books-loki|ux-b)
-        # HinD cluster(s) use `podman` driver instead of `docker`
-        sed -ix 's/driver\s*=\s*"docker"/driver="podman"/'  project.hcl # xxx
-        sed -ix 's/memory_hard_limit/# memory_hard_limit/'  project.hcl # xxx
+      staging|prod)
+        NOMAD_VAR_DEPLOY_WITH_PODMAN=
+        NOMAD_VAR_LEGACY_SERVICE_NAMES_URLPREFIX=true
         ;;
     esac
+  fi
+
+  if [ "$NOMAD_VAR_DEPLOY_WITH_PODMAN" = "true" ]; then
+    # Use `podman` driver instead of `docker` (eg: HinD cluster(s) or other clusters)
+    sed -ix 's/driver\s*=\s*"docker"/driver="podman"/'  project.hcl
+    sed -ix 's/memory_hard_limit/# memory_hard_limit/'  project.hcl
   fi
 
   verbose "Handling NOMAD_SECRETS."
@@ -247,39 +255,35 @@ EOF
   fi
 
 
-  verbose "copy current env vars starting with "CI_" to "NOMAD_VAR_CI_" variants & inject them into shell"
+  verbose "add env vars starting with "CI_" to env file for project.nomad"
   # Avoid env vars like commit messages (or possibly commit author) with quotes or weirness
   # or malicious values by only passing through env vars, set by gitlab automation,
   # with known sanitized values.
   # More can be added if/as needed.  list is sorted.
-  stashed_bash_flags=$-
-  set +u
-  export NOMAD_VAR_CI_APPLICATION_REPOSITORY="$CI_APPLICATION_REPOSITORY"
-  export NOMAD_VAR_CI_APPLICATION_TAG="$CI_APPLICATION_TAG"
-  export NOMAD_VAR_CI_BUILDS_DIR="$CI_BUILDS_DIR"
-  export NOMAD_VAR_CI_COMMIT_BRANCH="$CI_COMMIT_BRANCH"
-  export NOMAD_VAR_CI_COMMIT_REF_NAME="$CI_COMMIT_REF_NAME"
-  export NOMAD_VAR_CI_COMMIT_REF_SLUG="$CI_COMMIT_REF_SLUG"
-  export NOMAD_VAR_CI_COMMIT_SHA="$CI_COMMIT_SHA"
-  export NOMAD_VAR_CI_COMMIT_SHORT_SHA="$CI_COMMIT_SHORT_SHA"
-  export NOMAD_VAR_CI_COMMIT_TAG="$CI_COMMIT_TAG"
-  export NOMAD_VAR_CI_CONCURRENT_ID="$CI_CONCURRENT_ID"
-  export NOMAD_VAR_CI_DEFAULT_BRANCH="$CI_DEFAULT_BRANCH"
-  export NOMAD_VAR_CI_GITHUB_IMAGE="$CI_GITHUB_IMAGE"
-  export NOMAD_VAR_CI_HOSTNAME="$CI_HOSTNAME"
-  export NOMAD_VAR_CI_PIPELINE_SOURCE="$CI_PIPELINE_SOURCE"
-  export NOMAD_VAR_CI_PROJECT_DIR="$CI_PROJECT_DIR"
-  export NOMAD_VAR_CI_PROJECT_NAME="$CI_PROJECT_NAME"
-  export NOMAD_VAR_CI_PROJECT_PATH_SLUG="$CI_PROJECT_PATH_SLUG"
-  export NOMAD_VAR_CI_REGISTRY="$CI_REGISTRY"
-  export NOMAD_VAR_CI_REGISTRY_IMAGE="$CI_REGISTRY_IMAGE"
-  export NOMAD_VAR_CI_REGISTRY_PASSWORD="$CI_REGISTRY_PASSWORD"
-  export NOMAD_VAR_CI_REGISTRY_READ_TOKEN="$CI_REGISTRY_READ_TOKEN"
-  export NOMAD_VAR_CI_REGISTRY_USER="$CI_REGISTRY_USER"
-  if [[ $stashed_bash_flags =~ u ]]; then
-    # we were being run with `set -u` (fail out if a var is undefined).  we can restore that now.
-    set -u
-  fi
+  echo "
+CI_APPLICATION_REPOSITORY='$CI_APPLICATION_REPOSITORY'
+CI_APPLICATION_TAG='$CI_APPLICATION_TAG'
+CI_BUILDS_DIR='$CI_BUILDS_DIR'
+CI_COMMIT_BRANCH='$CI_COMMIT_BRANCH'
+CI_COMMIT_REF_NAME='$CI_COMMIT_REF_NAME'
+CI_COMMIT_REF_SLUG='$CI_COMMIT_REF_SLUG'
+CI_COMMIT_SHA='$CI_COMMIT_SHA'
+CI_COMMIT_SHORT_SHA='$CI_COMMIT_SHORT_SHA'
+CI_COMMIT_TAG='$CI_COMMIT_TAG'
+CI_CONCURRENT_ID='$CI_CONCURRENT_ID'
+CI_DEFAULT_BRANCH='$CI_DEFAULT_BRANCH'
+CI_GITHUB_IMAGE='$CI_GITHUB_IMAGE'
+CI_HOSTNAME='$CI_HOSTNAME'
+CI_PIPELINE_SOURCE='$CI_PIPELINE_SOURCE'
+CI_PROJECT_DIR='$CI_PROJECT_DIR'
+CI_PROJECT_NAME='$CI_PROJECT_NAME'
+CI_PROJECT_PATH_SLUG='$CI_PROJECT_PATH_SLUG'
+CI_REGISTRY='$CI_REGISTRY'
+CI_REGISTRY_IMAGE='$CI_REGISTRY_IMAGE'
+CI_REGISTRY_PASSWORD='$CI_REGISTRY_PASSWORD'
+CI_REGISTRY_READ_TOKEN='$CI_REGISTRY_READ_TOKEN'
+CI_REGISTRY_USER='$CI_REGISTRY_USER'
+" >> env.env
 
 
   if [ "$NOMAD_TOKEN" = test ]; then

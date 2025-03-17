@@ -1,6 +1,6 @@
 # Variables used below and their defaults if not set externally
 variables {
-  # These all pass through from GitLab [build] phase.
+  # These all pass through from GitLab [deploy] phase.
   # Some defaults filled in w/ example repo "bai" in group "internetarchive"
   # (but all 7 get replaced during normal GitLab CI/CD from CI/CD variables).
   CI_REGISTRY = "registry.gitlab.com"                       # registry hostname
@@ -74,6 +74,8 @@ variables {
         }
    */
   IS_BATCH = false
+
+  LEGACY_SERVICE_NAMES_URLPREFIX = false
 
   # There are more variables immediately after this - but they are "lists" or "maps" and need
   # special definitions to not have defaults or overrides be treated as strings.
@@ -174,9 +176,7 @@ locals {
 
   legacy = var.CI_PROJECT_PATH_SLUG == "www-dweb-ipfs" ? true : (var.CI_PROJECT_PATH_SLUG == "www-dweb-webtorrent" ? true : false) # xxx
 
-  legacy2 = local.host0domain == "staging.archive.org" || local.host0domain == "prod.archive.org" || var.HOSTNAMES[0] == "polyfill.archive.org" || var.HOSTNAMES[0] == "esm.archive.org" || var.HOSTNAMES[0] == "purl.archive.org" || var.HOSTNAMES[0] == "popcorn.archive.org" # xxx
-
-  tags = local.legacy2 ? merge(
+  tags = var.LEGACY_SERVICE_NAMES_URLPREFIX ? merge(
     {for portnum, portname in local.ports_extra_https: portname => [
       # If the main deploy hostname is `card.example.com`, and a 2nd port is named `backend`,
       # then make its hostname be `card-backend.example.com`
@@ -258,7 +258,7 @@ job "NOMAD_VAR_SLUG" {
         name = "${var.SLUG}"
         task = "http"
 
-        tags = [for HOST in var.HOSTNAMES: local.legacy2 ? "urlprefix-${HOST}" : "https://${HOST}"]
+        tags = [for HOST in var.HOSTNAMES: var.LEGACY_SERVICE_NAMES_URLPREFIX ? "urlprefix-${HOST}" : "https://${HOST}"]
 
         canary_tags = [for HOST in var.HOSTNAMES: "https://canary-${HOST}"]
 
