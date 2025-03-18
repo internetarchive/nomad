@@ -227,7 +227,7 @@ function main() {
     case "$NA" in
       staging|prod)
         NOMAD_VAR_DEPLOY_WITH_PODMAN=
-        NOMAD_VAR_LEGACY_SERVICE_NAMES_URLPREFIX=true
+        export NOMAD_VAR_LEGACY_SERVICE_NAMES_URLPREFIX=true
         ;;
     esac
   fi
