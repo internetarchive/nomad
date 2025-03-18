@@ -21,6 +21,8 @@ function main() {
     NOMAD_TOKEN_STAGING=${NOMAD_TOKEN_STAGING:-""}
     NOMAD_TOKEN_EXT=${NOMAD_TOKEN_EXT:-""}
     PRIVATE_REPO=${PRIVATE_REPO:-""}
+    NOMAD_VAR_DEPLOY_WITH_PODMAN=${NOMAD_VAR_DEPLOY_WITH_PODMAN:-""}
+    NOMAD_VAR_LEGACY_SERVICE_NAMES_URLPREFIX=${NOMAD_VAR_LEGACY_SERVICE_NAMES_URLPREFIX:-""}
   fi
 
 
@@ -221,13 +223,19 @@ function main() {
 
   if [[ "$NOMAD_ADDR" == *.archive.org ]]; then
     local NA=$(echo "$NOMAD_ADDR" |cut -f1 -d. |sed 's=^https://==')
+    NOMAD_VAR_DEPLOY_WITH_PODMAN=true
     case "$NA" in
-      work|hind|dev|ext|books-loki|ux-b)
-        # HinD cluster(s) use `podman` driver instead of `docker`
-        sed -ix 's/driver\s*=\s*"docker"/driver="podman"/'  project.hcl # xxx
-        sed -ix 's/memory_hard_limit/# memory_hard_limit/'  project.hcl # xxx
+      staging|prod)
+        NOMAD_VAR_DEPLOY_WITH_PODMAN=
+        NOMAD_VAR_LEGACY_SERVICE_NAMES_URLPREFIX=true
         ;;
     esac
+  fi
+
+  if [ "$NOMAD_VAR_DEPLOY_WITH_PODMAN" = "true" ]; then
+    # Use `podman` driver instead of `docker` (eg: HinD cluster(s) or other clusters)
+    sed -ix 's/driver\s*=\s*"docker"/driver="podman"/'  project.hcl
+    sed -ix 's/memory_hard_limit/# memory_hard_limit/'  project.hcl
   fi
 
   verbose "Handling NOMAD_SECRETS."
@@ -247,7 +255,7 @@ EOF
   fi
 
 
-  verbose "copy current env vars starting with "CI_" to "NOMAD_VAR_CI_" variants & inject them into shell"
+  verbose "add env vars starting with "CI_" to env file for project.nomad"
   # Avoid env vars like commit messages (or possibly commit author) with quotes or weirness
   # or malicious values by only passing through env vars, set by gitlab automation,
   # with known sanitized values.
