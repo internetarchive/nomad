@@ -239,7 +239,7 @@ Keep in mind if your deployment uses a "persistent volume" or talks to other bac
 
 Setting up your repo to deploy to production is easy!
 
-- add a CI/CD Secret `NOMAD_TOKEN_PROD` with the nomad cluster value (ask tracey or robK)
+- add a CI/CD Secret `NOMAD_TOKEN_PROD` with the nomad cluster value (ask tracey or scott)
   - make it: protected, masked, hidden
 ![Production CI/CD Secret](img/prod.jpg)
 - Make a new branch named `production` (presumably from your repo's latest `main` or `master` branch)
@@ -255,28 +255,13 @@ Our staging cluster will deploy your repo to a running container on one of its V
 
 Setting up your repo to deploy to staging is easy!
 
-- add a CI/CD Secret `NOMAD_TOKEN_STAGING` with the nomad cluster value (ask tracey or robK)
+- add a CI/CD Secret `NOMAD_TOKEN_STAGING` with the nomad cluster value (ask tracey or scott)
   - make it: protected, masked, hidden (similar to `production` section above)
 - Make a new branch named `staging` (presumably from your repo's latest `main` or `master` branch)
   - It should now deploy your project to a different `NOMAD_ADDR` url
   - Your default hostname domain will change from `.dev.archive.org` to `.staging.archive.org`
 - [GitLab only] - [Protect the `staging` branch](https://docs.gitlab.com/ee/user/project/protected_branches.html)
   - suggest using same settings as your `main` or `master` (or default) branch, changing `production` to `staging` here:
-![Protect a branch](img/protect.jpg)
-
-
-### Deploying to ext nomad cluster (archive.org only)
-Our "ext" cluster will deploy your repo to a running container on one of its VMs.
-
-Setting up your repo to deploy to ext is easy!
-
-- add a CI/CD Secret `NOMAD_TOKEN_EXT` with the nomad cluster value (ask tracey or robK)
-  - make it: protected, masked, hidden (similar to `production` section above)
-- Make a new branch named `ext` (presumably from your repo's latest `main` or `master` branch)
-  - It should now deploy your project to a different `NOMAD_ADDR` url
-  - Your default hostname domain will change from `.dev.archive.org` to `.ext.archive.org`
-- [GitLab only] - [Protect the `ext` branch](https://docs.gitlab.com/ee/user/project/protected_branches.html)
-  - suggest using same settings as your `main` or `master` (or default) branch, changing `production` to `ext` here:
 ![Protect a branch](img/protect.jpg)
 
 
