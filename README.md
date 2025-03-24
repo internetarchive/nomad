@@ -10,10 +10,8 @@ More documentation coming soon.
 
 
 # GitLab Overview
-Deployment leverages a simple `.gitlab-ci.yml` using GitLab runners & CI/CD ([build] and [test]);
+Deployment leverages a simple [ci.yml](ci.yml) using GitLab runners & CI/CD ([build] and [test]);
 then switches to custom [deploy] phase to deploy docker containers into `nomad`.
-
-This also contains demo "hi world" webapp.
 
 
 Uses:
