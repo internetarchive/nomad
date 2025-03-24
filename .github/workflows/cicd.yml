@@ -3,11 +3,12 @@ jobs:
   cicd:
     # https://github.com/internetarchive/cicd
     uses: internetarchive/cicd/.github/workflows/cicd.yml@main
-    with:
-      NOMAD_VAR_HOSTNAMES: '["nomad.archive.org"]'
-      NOMAD_VAR_MEMORY: 100
-      NOMAD_VAR_CHECK_PROTOCOL: 'tcp'
-      BASE_DOMAIN: ${{ github.ref == 'refs/heads/production' && 'prod.archive.org' || 'ext.archive.org' }}
-    secrets:
-      NOMAD_TOKEN_EXT: ${{ secrets.NOMAD_TOKEN_EXT }}
-      NOMAD_TOKEN_PROD: ${{ secrets.NOMAD_TOKEN_PROD }}
+
+    #with:
+      # NOMAD_VAR_HOSTNAMES: '["nomad.archive.org"]'
+      # NOMAD_VAR_MEMORY: 100
+      # NOMAD_VAR_CHECK_PROTOCOL: 'tcp'
+      # BASE_DOMAIN: ${{ github.ref == 'refs/heads/production' && 'prod.archive.org' || 'ext.archive.org' }}
+    #secrets:
+    #  NOMAD_TOKEN_EXT: ${{ secrets.NOMAD_TOKEN_EXT }}
+    #  NOMAD_TOKEN_PROD: ${{ secrets.NOMAD_TOKEN_PROD }}
