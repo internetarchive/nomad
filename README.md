@@ -162,7 +162,7 @@ variables:
 If you want to run multiple containers in the same job and group, set this to true.  For example, you might want to run a Postgresql 3rd party container from bitnami, and have the main/http front-end container talk to it.  Being in the same group will ensure all containers run on the same VM; which makes communication between them extremely easy.  You simply need to inspect environment variables.
 
 You can see a minimal example of two containers with a "front end" talking to a "backend" here
-https://gitlab.com/internetarchive/nomad-multiple-tasks
+https://github.com/internetarchive/nomad-multiple-tasks
 
 See also a [postgres DB setup example](#postgres-db).
 ```yaml
