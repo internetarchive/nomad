@@ -1,29 +1,36 @@
 # Variables used below and their defaults if not set externally
 variables {
-  # These all pass through from GitLab [deploy] phase.
-  # Some defaults filled in w/ example repo "bai" in group "internetarchive"
-  # (but all 7 get replaced during normal GitLab CI/CD from CI/CD variables).
-  CI_REGISTRY = "registry.gitlab.com"                       # registry hostname
-  CI_REGISTRY_IMAGE = "registry.gitlab.com/internetarchive/bai"  # registry image location
-  CI_COMMIT_REF_SLUG = "master"                             # branch name, slugged
-  CI_COMMIT_SHA = "latest"                                  # repo's commit for current pipline
-  CI_PROJECT_PATH_SLUG = "internetarchive-bai"              # repo and group it is part of, slugged
+  # GitHub (GH) and GitLab (GL) do things slightly differently.
+  # Some defaults are filled in w/ example repo "hello-js" in group "internetarchive".
+  # GitHub:
+  #   normally `deploy.sh` in the same dir as this file use `$GITHUB_REPOSITORY` to setup
+  #   what's needed for these first 7-8 vars.
+  # GitLab:
+  #   these all pass through from  [deploy] phase.
+  #   all 7-8 of these first vars get replaced during normal GitLab CI/CD from CI/CD variables.
+  CI_REGISTRY = "ghcr.io"                              # registry hostname
+  CI_REGISTRY_IMAGE = "ghcr.io/internetarchive"        # registry image location
+  CI_COMMIT_REF_SLUG = "hello-js"                      # GH: repo name; GL: branch name. slugged
+  CI_COMMIT_SHA = "main"                               # GH: branch name; GL: commit sha
+  CI_PROJECT_PATH_SLUG = "internetarchive-hello-js"    # repo and group it is part of, slugged
 
   # NOTE: if repo is public, you can ignore these next 3 registry related vars
+  # These next 2 get set automatically in gitlab pipelines
   CI_REGISTRY_USER = ""                                     # set for each pipeline and ..
   CI_REGISTRY_PASSWORD = ""                                 # .. allows pull from private registry
-  # optional CI/CD registry read token which allows rerun of deploy phase anytime later
+  # optional CI/CD gitlab/github registry read token, allowing rerun of deploy phase anytime later
   CI_REGISTRY_READ_TOKEN = ""                               # preferred name
 
 
-  # This autogenerates from https://github.com/internetarchive/nomad/blob/main/ci.yml
-  # & normally has "-$CI_COMMIT_REF_SLUG" appended, but is omitted for "main" or "master" branches.
+  # This autogenerates from `deploy.sh` in the same dir (look for `export NOMAD_VAR_SLUG`).
+  # It normally has "-$CI_COMMIT_REF_SLUG" appended, but is omitted for "main" or "master" branches.
   # You should not change this.
-  SLUG = "internetarchive-bai"
+  SLUG = "internetarchive-hello-js"
 
 
-  # The remaining vars can be optionally set/overriden in a repo via CI/CD variables in repo's
-  # setting or repo's `.gitlab-ci.yml` file.
+  # The remaining vars can be optionally set/overriden via:
+  #   [github] a github action, eg: https://github.com/internetarchive/cicd
+  #   [gitlab] the repo's `.gitlab-ci.yml` file, or its Settings > CI/CD > Variables
   # Each CI/CD var name should be prefixed with 'NOMAD_VAR_'.
 
   # default 300 MB
@@ -120,7 +127,8 @@ variable "VOLUMES" {
 }
 
 variable "NOMAD_SECRETS" {
-  # this is automatically populated with NOMAD_SECRET_ env vars by @see .gitlab-ci.yml
+  # This can be passed in via a GitHub Action, or
+  # is automatically populated with NOMAD_SECRET_ env vars from GitLab via deploy.sh in this dir.
   type = map(string)
   default = {}
 }
