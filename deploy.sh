@@ -298,15 +298,32 @@ EOF
   set -x
   nomad validate -var-file=env.env project.hcl
   nomad plan     -var-file=env.env project.hcl 2>&1 |sed 's/\(password[^ \t]*[ \t]*\).*/\1 ... /' |tee plan.log  ||  echo
-  export INDEX=$(grep -E -o -- '-check-index [0-9]+' plan.log |tr -dc 0-9)
+  local INDEX=$(grep -E -o -- '-check-index [0-9]+' plan.log |tr -dc 0-9)
+
+  export JOB_VERSION=
 
   # some clusters sometimes fail to fetch deployment :( -- so let's retry 5x
   for RETRIES in $(seq 1 5); do
     set -o pipefail
     nomad run    -var-file=env.env -check-index $INDEX project.hcl 2>&1 |tee check.log
+
+    if [ ! $JOB_VERSION ]; then
+      # Determine the new 'Job Version' that *should be* going live if everything goes right.
+      # If later in the log, we see a *higher* (by 1) 'Job Version', then the deploy has failed
+      # midway through and is doing an auto rollback to a prior "known good" deploy.
+      export JOB_VERSION=$(grep -oE '^Job Version[ ]*=[ ]*[0-9]*' check.log |rev |cut -f1 -d' ' |rev |head -1)
+    fi
+
+    JOB_VERSION_LAST=$(grep -oE '^Job Version[ ]*=[ ]*[0-9]*' check.log |rev |cut -f1 -d' ' |rev |tail -1)
+
     if [ "$?" = "0" ]; then
-      if grep -E 'Status[ ]*=[ ]*failed' check.log; then
-        # for example, unhealthy 5x, unable to roll back, ends up failing
+      if grep -E '^Status[ ]*=[ ]*failed' check.log; then
+        echo "FAIL: likely deploy was repeatedly unhealthy, unable to roll back, and ended up failing"
+        exit 1
+      fi
+
+      if [ "$JOB_VERSION" != "$JOB_VERSION_LAST" ]; then
+        echo "FAIL: likely deploy was repeatedly unhealthy and auto rolled back to a prior 'known good' deploy"
         exit 1
       fi
 
