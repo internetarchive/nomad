@@ -182,10 +182,9 @@ function prodtest() {
   GITHUB_REPOSITORY=internetarchive/emularity-engine
   GITHUB_REF_NAME=main
   BASE_DOMAIN=ux-b.archive.org
-  NOMAD_TOKEN_PROD=test
+  NOMAD_VAR_HOSTNAMES='["emularity-engine"]'
   expects 'nomad cluster https://ux-b.archive.org' \
-          'deploying to https://emularity-engine.ux-b.archive.org' \
-          'using nomad production token'
+          'deploying to https://emularity-engine.ux-b.archive.org'
 )
 (
   banner "GL repo using 'main' branch to be like 'production'"
