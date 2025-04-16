@@ -1,5 +1,5 @@
 # [source:  https://github.com/internetarchive/nomad/blob/main/ci.yml ]
-# [overview: https://gitlab.com/internetarchive/nomad ]
+# [overview: https://github.com/internetarchive/nomad ]
 #
 # To use this, you can add these 2 lines to a file named: .gitlab-ci.yml
 # at the top-level of your GitLab repo (remove lead '# ' chars):

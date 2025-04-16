@@ -10,4 +10,4 @@ jobs:
       NOMAD_VAR_CHECK_PROTOCOL: 'tcp'
       BASE_DOMAIN: ux-b.archive.org
     secrets:
-      NOMAD_TOKEN: xxx
+      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
