@@ -138,7 +138,7 @@ function nom-cp() {
   cat "$FILE" | ( set -x; set +e; nomad alloc exec -i -task $TASK "$ALLOC" sh -c "timeout 2 cat >| '$REST'" )
   NOMAD_EXIT=$?
   # timeout should come back with a 124 or 143 which we treat as success
-  ([ $NOMAD_EXIT -eq 124 ] || [ $NOMAD_EXIT -eq 124 ]) && NOMAD_EXIT=0
+  ([ $NOMAD_EXIT -eq 124 ] || [ $NOMAD_EXIT -eq 143 ]) && NOMAD_EXIT=0
 
   if [ -n "${RSYNC_EXIT}" ]; then
     if [ ${RSYNC_EXIT} -ne 0 ]; then
