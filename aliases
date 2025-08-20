@@ -336,3 +336,36 @@ function web-logs-tail() {
     tail -f /var/log/caddy/access.log | jq -r '"\(.request.host)\(.request.uri)\t\t\(.request.headers."User-Agent")"'
   )
 }
+
+
+function nom-deploys-check() {
+  # admin script that more thoroughly finds and prints out any deploys with any kind of issues
+  nomad system gc
+  sleep 1.5
+  clear -x
+  echo 'Task Group                                                      Version  Desired  Status   Created    Modified'
+  ( for i in $(nomad node status |grep -Fv Eligibility |cut -f1 -d' '); do
+      nomad node status -short $i \
+        |grep -E '^Name|run' \
+        |grep -Fv running \
+        |perl -pe 's/^[^ ]+ +[^ ]+ +//'
+  done ) \
+    |grep -Ev '^[^ ]+$' -B1
+    # NOTE:👆🏽 final grep is to show any nomad server names (that have deploys with issues)
+
+  line
+
+  nomad status | grep -Fv running
+}
+
+
+function nom-supervisor-status () {
+  # admin script that shows the supervisord status of all jobs in each HinD cluster's VMs
+  # requires `ssh` access to each VM that is running HinD
+  for NODE in $(nomad node status -t '{{range .}}{{.Name}}{{"\n"}}{{end}}' |sort |grep -E .); do
+    echo "=== $NODE ==="
+    ssh $NODE 'sudo podman exec -it hind sh -c "supervisorctl status"'
+    echo
+  done
+}
+
