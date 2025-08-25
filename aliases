@@ -345,7 +345,7 @@ function nom-deploys-check() {
   clear -x
   echo 'Task Group                                                      Version  Desired  Status   Created    Modified'
   ( for i in $(nomad node status |grep -Fv Eligibility |cut -f1 -d' '); do
-      nomad node status -short $i \
+      nomad node status --namespace '*' -short $i \
         |grep -E '^Name|run' \
         |grep -Fv running \
         |perl -pe 's/^[^ ]+ +[^ ]+ +//'
@@ -355,7 +355,7 @@ function nom-deploys-check() {
 
   line
 
-  nomad status | grep -Fv running
+  nomad status --namespace '*' |grep -Fv running
 }
 
 
