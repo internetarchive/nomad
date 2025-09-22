@@ -392,7 +392,7 @@ CI_COMMIT_SHA=${var.CI_COMMIT_SHA}
         for_each = slice(keys(var.NOMAD_SECRETS), 0, min(1, length(keys(var.NOMAD_SECRETS))))
         labels = ["kv"]
         content {
-          driver = "DRIVER_SET_AT_RUNTIME"
+          driver = "raw_exec"
           config {
             command = "/usr/bin/consul"
             args = [ "kv", "put", var.SLUG, local.kv ]

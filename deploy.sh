@@ -269,28 +269,25 @@ EOF
   fi
 
 
-  # check the container related `driver` value(s).
-  # scan entire complex project JSON for any key named `Driver` and write to a file
-  nomad run -output -var-file=env.env project.hcl |jq '.. | .Driver? | select(. != null)' >| drivers.txt
-  # there should be exactly one of these drivers in the HCL
-  NUM=$(grep -icE '^"DRIVER_SET_AT_RUNTIME"$' drivers.txt |cat)
-  if [ "$NUM" -ne 1 ]; then echo 'bad drivers setup'; exit 1; fi
-  # there should be 1+ of either of these drivers in the HCL
-  NUM=$(grep -icE '^"(docker|podman)"$' drivers.txt |cat)
-  if [ "$NUM" -lt 1 ]; then echo 'drivers not located?'; exit 1; fi
-  # there should be 0 of either of these drivers in the HCL
-  NUM=$(grep -icE '^"(exec|raw_exec)"$' drivers.txt |cat)
-  if [ "$NUM" -ne 0 ]; then echo 'bad drivers in project'; exit 1; fi
-  rm drivers.txt
-
-  # Now swap in the 'raw_exec' driver for the 'kv' task
-  sed -ix 's/driver = "DRIVER_SET_AT_RUNTIME"/driver = "raw_exec"/'  project.hcl
-
-
   if [ "$NOMAD_TOKEN" = test ]; then
     nomad run -output -var-file=env.env project.hcl >| project.json
     exit 0
   fi
+
+
+  # check the `driver` value for all specified containers.
+  # scan entire complex project JSON for any key named `Driver` and write to a file.
+  nomad run -output project.hcl |jq '.. | .Driver? | select(. != null)' >| drivers.txt
+  # there should be 1+ of either of these drivers in the HCL
+  NUM=$(grep -icE '^"(docker|podman)"$' drivers.txt |cat)
+  if [ "$NUM" -lt 1 ]; then echo 'drivers not found?'; exit 1; fi
+  # there should be 0 of either of these drivers in the HCL.
+  # NOTE: the `raw_exec` driver used only for secrets isn't in the `drivers.txt` list since we did
+  # *NOT* use `-var-file=env.env` (so the entire kv related `task` gets removed in `nomad run`).
+  NUM=$(grep -icE '^"(exec|raw_exec)"$' drivers.txt |cat)
+  if [ "$NUM" -ne 0 ]; then echo 'bad drivers in project'; exit 1; fi
+  rm drivers.txt
+
 
   set -x
   nomad validate -var-file=env.env project.hcl
