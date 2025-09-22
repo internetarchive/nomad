@@ -287,6 +287,7 @@ EOF
   NUM=$(grep -icE '^"(exec|raw_exec)"$' drivers.txt |cat)
   if [ "$NUM" -ne 0 ]; then echo 'bad drivers in project'; exit 1; fi
   rm drivers.txt
+  echo drivers validated
 
 
   set -x
