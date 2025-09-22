@@ -139,11 +139,6 @@ function main() {
   fi
 
 
-  if [[ "$NOMAD_ADDR" == *crawl*.archive.org:* ]]; then # nixxx
-    export NOMAD_VAR_CONSUL_PATH='/usr/local/bin/consul'
-  fi
-
-
   if [ "$CI_REGISTRY_READ_TOKEN" = "0" ]; then unset CI_REGISTRY_READ_TOKEN; fi
 
   ############################### NOMAD VARS SETUP ##############################
@@ -272,6 +267,24 @@ EOF
     # we were being run with `set -u` (fail out if a var is undefined).  we can restore that now.
     set -u
   fi
+
+
+  # check the container related `driver` value(s).
+  # scan entire complex project JSON for any key named `Driver` and write to a file
+  nomad run -output -var-file=env.env project.hcl |jq '.. | .Driver? | select(. != null)' >| drivers.txt
+  # there should be exactly one of these drivers in the HCL
+  NUM=$(grep -icE '^"DRIVER_SET_AT_RUNTIME"$' drivers.txt |cat)
+  if [ "$NUM" != 1 ]; then; echo 'bad drivers setup'; exit 1; fi
+  # there should be 1+ of either of these drivers in the HCL
+  NUM=$(grep -icE '^"(docker|podman)"$' drivers.txt |cat)
+  if [ "$NUM" -lt 1 ]; then; echo 'drivers not located?'; exit 1; fi
+  # there should be 0 of either of these drivers in the HCL
+  NUM=$(grep -icE '^"(exec|raw_exec)"$' drivers.txt |cat)
+  if [ "$NUM" != 0 ]; then; echo 'bad drivers in project'; exit 1; fi
+  rm drivers.txt
+
+  # Now swap in the 'raw_exec' driver for the 'kv' task
+  sed -ix 's/driver = "DRIVER_SET_AT_RUNTIME"/driver = "raw_exec"/'  project.hcl
 
 
   if [ "$NOMAD_TOKEN" = test ]; then

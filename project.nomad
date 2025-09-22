@@ -60,8 +60,6 @@ variables {
   # only used for github repos
   CI_GITHUB_IMAGE = ""
 
-  CONSUL_PATH = "/usr/bin/consul"
-
   FORCE_PULL = false
 
   # For jobs with 2+ containers (and tasks) (so we can setup ports properly)
@@ -394,9 +392,9 @@ CI_COMMIT_SHA=${var.CI_COMMIT_SHA}
         for_each = slice(keys(var.NOMAD_SECRETS), 0, min(1, length(keys(var.NOMAD_SECRETS))))
         labels = ["kv"]
         content {
-          driver = "raw_exec"
+          driver = "DRIVER_SET_AT_RUNTIME"
           config {
-            command = var.CONSUL_PATH
+            command = "/usr/bin/consul"
             args = [ "kv", "put", var.SLUG, local.kv ]
           }
           lifecycle {
