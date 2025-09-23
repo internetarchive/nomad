@@ -139,11 +139,6 @@ function main() {
   fi
 
 
-  if [[ "$NOMAD_ADDR" == *crawl*.archive.org:* ]]; then # nixxx
-    export NOMAD_VAR_CONSUL_PATH='/usr/local/bin/consul'
-  fi
-
-
   if [ "$CI_REGISTRY_READ_TOKEN" = "0" ]; then unset CI_REGISTRY_READ_TOKEN; fi
 
   ############################### NOMAD VARS SETUP ##############################
@@ -278,6 +273,22 @@ EOF
     nomad run -output -var-file=env.env project.hcl >| project.json
     exit 0
   fi
+
+
+  # check the `driver` value for all specified containers.
+  # scan entire complex project JSON for any key named `Driver` and write to a file.
+  nomad run -output project.hcl |jq '.. | .Driver? | select(. != null)' >| drivers.txt
+  # there should be 1+ of either of these drivers in the HCL
+  NUM=$(grep -icE '^"(docker|podman)"$' drivers.txt |cat)
+  if [ "$NUM" -lt 1 ]; then echo 'drivers not found?'; exit 1; fi
+  # there should be 0 of either of these drivers in the HCL.
+  # NOTE: the `raw_exec` driver used only for secrets isn't in the `drivers.txt` list since we did
+  # *NOT* use `-var-file=env.env` (so the entire kv related `task` gets removed in `nomad run`).
+  NUM=$(grep -icE '^"(exec|raw_exec)"$' drivers.txt |cat)
+  if [ "$NUM" -ne 0 ]; then echo 'bad drivers in project'; exit 1; fi
+  rm drivers.txt
+  echo drivers validated
+
 
   set -x
   nomad validate -var-file=env.env project.hcl
