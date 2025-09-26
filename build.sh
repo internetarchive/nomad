@@ -29,10 +29,24 @@ gl_write_auto_build_variables_file() {
   echo "CI_APPLICATION_TAG=$CI_APPLICATION_TAG@$(podman --remote image inspect --format='{{ index (split (index .RepoDigests 0) "@") 1 }}' "$image_tagged")" > gl-auto-build-variables.env
 }
 
+PUSH_LATEST=true
+if [ "$NOMAD_VAR_SERVERLESS" != "" ]; then
+  PUSH_LATEST=
+fi
+
+if [ "$BUILD_DEPLOY" = true ]; then
+  PUSH_LATEST=
+  export CI_REGISTRY_TAG=${CI_COMMIT_SHA}-deploy
+  export DOCKERFILE_PATH=$(ls Dockerfile.deploy Containerfile.deploy Containerfile.in.deploy 2>/dev/null |head -1)
+fi
+
+if [[ -z "$CI_REGISTRY_TAG" ]]; then
+  export CI_REGISTRY_TAG=$CI_COMMIT_SHA
+fi
 
 if [[ -z "$CI_COMMIT_TAG" ]]; then
   export CI_APPLICATION_REPOSITORY=${CI_APPLICATION_REPOSITORY:-$CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG}
-  export CI_APPLICATION_TAG=${CI_APPLICATION_TAG:-$CI_COMMIT_SHA}
+  export CI_APPLICATION_TAG=${CI_APPLICATION_TAG:-$CI_REGISTRY_TAG}
 else
   export CI_APPLICATION_REPOSITORY=${CI_APPLICATION_REPOSITORY:-$CI_REGISTRY_IMAGE}
   export CI_APPLICATION_TAG=${CI_APPLICATION_TAG:-$CI_COMMIT_TAG}
@@ -57,7 +71,7 @@ build_args=(
   --tag "$image_tagged"
 )
 
-if [ "$NOMAD_VAR_SERVERLESS" = "" ]; then
+if [ $PUSH_LATEST ]; then
   build_args+=(--tag "$image_latest")
 fi
 
@@ -83,7 +97,7 @@ fi
   set -x
   podman --remote push "$image_tagged"
 )
-if [ "$NOMAD_VAR_SERVERLESS" = "" ]; then
+if [ $PUSH_LATEST ]; then
   (
     set -x
     podman --remote push "$image_latest"
