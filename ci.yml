@@ -48,7 +48,7 @@ build_deploy:
   stage: build
   script:
     # https://github.com/internetarchive/nomad/blob/main/build.sh
-    - export CI_REGISTRY_TAG=${CI_COMMIT_SHA}-deploy
+    - export BUILD_DEPLOY=true
     - /build.sh
 
   rules:
