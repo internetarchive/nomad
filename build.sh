@@ -34,10 +34,10 @@ if [ "$NOMAD_VAR_SERVERLESS" != "" ]; then
   PUSH_LATEST=
 fi
 
-if [ "$BUILD_DEPLOY" = true ]; then
+if [ "$NOMAD_VAR_BUILD_DEPLOY" ]; then
   PUSH_LATEST=
   export CI_REGISTRY_TAG=${CI_COMMIT_SHA}-deploy
-  export DOCKERFILE_PATH=$(ls Dockerfile.deploy Containerfile.deploy Containerfile.in.deploy 2>/dev/null |head -1)
+  export DOCKERFILE_PATH=$NOMAD_VAR_BUILD_DEPLOY
 fi
 
 if [[ -z "$CI_REGISTRY_TAG" ]]; then

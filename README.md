@@ -56,6 +56,7 @@ _**Note:** For urls like https://archive.org/services/project -- watch out for r
 ### Customizing
 There are various options that can be used in conjunction with the `project.nomad` and `.gitlab-ci.yml` files, keys:
 ```text
+NOMAD_VAR_BUILD_DEPLOY
 NOMAD_VAR_CHECK_PATH
 NOMAD_VAR_CHECK_PROTOCOL
 NOMAD_VAR_CHECK_TIMEOUT
@@ -81,10 +82,19 @@ NOMAD_VAR_VOLUMES
 - You can simply insert them, with values, in your project's `.gitlab-ci.yml` file before including _our_ [ci.yml](ci.yml) like above.
 - Examples 👇
 #### Don't actually deploy containers to nomad
-Perhaps your project just wants to leverage the CI (Continuous Integration) for [buil] and/or [test] steps - but not CD (Continuous Deployment).  An example might be a back-end container that runs elsewhere and doesn't have web listener.
+Perhaps your project just wants to leverage the CI (Continuous Integration) for [build] and/or [test] steps - but not CD (Continuous Deployment).  An example might be a back-end container that runs elsewhere and doesn't have web listener.
 ```yaml
 variables:
   NOMAD_VAR_NO_DEPLOY: 'true'
+```
+
+#### Build one docker image for CI and one docker image for CD
+If your project might want to build & use a larger docker image for the CI (Continuous Integration)
+and a smaller docker image for CD (Continuous Deploy), you can set this variable to an alternate
+Dockerfile location in your repo, relative to the top dir.
+```yaml
+variables:
+  NOMAD_VAR_BUILD_DEPLOY: 'Dockerfile.deploy'
 ```
 
 #### Custom default RAM expectations from (default) 300 MB to 1 GB
@@ -214,6 +224,16 @@ bearer to access jobs part of the namespace `team-titan`.
 ```yaml
 variables:
   NOMAD_VAR_NAMESPACE: 'team-titan'
+```
+
+#### Only `docker tag` to `:latest` after all CI passes
+This is useful for repos that are setting up "serverless" docker images (typically don't do CD),
+and the `:latest` tag could get re-pulled anytime after that tag is pushed to the registry.
+The normal commit hash related tag will still get tagged & pushed, during [build], for CI tests.
+The `:latest` tag will get tagged & pushed *after* all CI tests have succeeded.
+```yaml
+variables:
+  NOMAD_VAR_SERVERLESS: 'true'
 ```
 
 

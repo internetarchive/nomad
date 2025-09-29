@@ -23,9 +23,10 @@ function main() {
     NOMAD_VAR_DEPLOY_WITH_PODMAN=${NOMAD_VAR_DEPLOY_WITH_PODMAN:-""}
     NOMAD_VAR_LEGACY_SERVICE_NAMES_URLPREFIX=${NOMAD_VAR_LEGACY_SERVICE_NAMES_URLPREFIX:-""}
     CI_REGISTRY_TAG=${CI_REGISTRY_TAG:-""}
+    NOMAD_VAR_BUILD_DEPLOY=${NOMAD_VAR_BUILD_DEPLOY:-""}
   fi
 
-  if [ -e Dockerfile.deploy -o -e Containerfile.deploy -o -e Containerfile.in.deploy ]; then
+  if [ "$NOMAD_VAR_BUILD_DEPLOY" ]; then
     CI_REGISTRY_TAG=${CI_COMMIT_SHA}-deploy
   else
     CI_REGISTRY_TAG=$CI_COMMIT_SHA

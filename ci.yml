@@ -13,7 +13,7 @@
 # to whatever your Nomad cluster was setup to.
 
 
-# NOTE: changes to *this* repo, will fire of GitHub Actions here:
+# NOTE: changes to *this* repo, will fire off GitHub Actions here:
 #   https://github.com/internetarchive/nomad/blob/main/.github/workflows/cicd.yml
 # which will re/make this container image:
 image: ghcr.io/internetarchive/nomad:main
@@ -29,12 +29,9 @@ build:
   # This was adapted & simplified from:
   # https://gitlab.com/gitlab-org/gitlab/-/raw/master/lib/gitlab/ci/templates/Jobs/Build.gitlab-ci.yml
   stage: build
-  variables:
-    DOCKER_HOST: 'unix:///run/podman/podman.sock'
-    DOCKER_TLS_CERTDIR: ''
-    DOCKER_BUILDKIT: 1
   script:
     # https://github.com/internetarchive/nomad/blob/main/build.sh
+    - export NOMAD_VAR_BUILD_DEPLOY=""
     - /build.sh
   artifacts:
     reports:
@@ -48,14 +45,11 @@ build_deploy:
   stage: build
   script:
     # https://github.com/internetarchive/nomad/blob/main/build.sh
-    - export BUILD_DEPLOY=true
     - /build.sh
-
   rules:
-    - exists:
-      - Dockerfile.deploy
-      - Containerfile.deploy
-      - Containerfile.in.deploy
+    - if: '$BUILD_DISABLED'
+      when: never
+    - if: '$NOMAD_VAR_BUILD_DEPLOY && $CI_COMMIT_BRANCH'
 
 deploy:
   stage: deploy
