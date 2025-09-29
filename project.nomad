@@ -7,9 +7,10 @@ variables {
   #   what's needed for these first 7-8 vars.
   # GitLab:
   #   these all pass through from  [deploy] phase.
-  #   all 7-8 of these first vars get replaced during normal GitLab CI/CD from CI/CD variables.
+  #   all 8-9 of these first vars get replaced during normal GitLab CI/CD from CI/CD variables.
   CI_REGISTRY = "ghcr.io"                              # registry hostname
   CI_REGISTRY_IMAGE = "ghcr.io/internetarchive"        # registry image location
+  CI_REGISTRY_TAG = "main"                             # GH: branch name; GL: commit sha
   CI_COMMIT_REF_SLUG = "hello-js"                      # GH: repo name; GL: branch name. slugged
   CI_COMMIT_SHA = "main"                               # GH: branch name; GL: commit sha
   CI_PROJECT_PATH_SLUG = "internetarchive-hello-js"    # repo and group it is part of, slugged
@@ -149,7 +150,7 @@ locals {
   ports_all = merge(local.ports_main, local.ports_extra_https, local.ports_extra_tcp, {})
 
   # Use CI_GITHUB_IMAGE if set, otherwise use GitLab vars interpolated string
-  docker_image = var.CI_GITHUB_IMAGE != "" ? var.CI_GITHUB_IMAGE : "${var.CI_REGISTRY_IMAGE}/${var.CI_COMMIT_REF_SLUG}:${var.CI_COMMIT_SHA}"
+  docker_image = var.CI_GITHUB_IMAGE != "" ? var.CI_GITHUB_IMAGE : "${var.CI_REGISTRY_IMAGE}/${var.CI_COMMIT_REF_SLUG}:${var.CI_REGISTRY_TAG}"
   # "
 
   # GitLab docker login user/pass timeout rather quickly.  If admin set CI_REGISTRY_READ_TOKEN key
