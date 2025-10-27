@@ -212,7 +212,7 @@ function _nom-url() {
   # logically private helper function
   URL=$(curl -sH "X-Nomad-Token: ${NOMAD_TOKEN?}" ${NOMAD_ADDR?}/v1/job/$JOB \
     | jq -r '.TaskGroups[0].Services[0].Tags' \
-    | fgrep . |fgrep -v redirect=308 |tr -d '", ' |perl -pe 's/:443//; s=^urlprefix\-=https://=;'
+    | fgrep . |tr -d '", '
   )
 }
 
@@ -358,8 +358,7 @@ function nom-deploys-check() {
   nomad status --namespace '*' |grep -Fv running
 }
 
-
-function nom-supervisor-status () {
+function nom-supervisor-status() {
   # admin script that shows the supervisord status of all jobs in each HinD cluster's VMs
   # requires `ssh` access to each VM that is running HinD
   for NODE in $(nomad node status -t '{{range .}}{{.Name}}{{"\n"}}{{end}}' |sort |grep -E .); do
@@ -369,3 +368,10 @@ function nom-supervisor-status () {
   done
 }
 
+function nom-hello-world() {
+  for NODE in $(nomad node status -t '{{range .}}{{.Name}}{{"\n"}}{{end}}' |sort |grep -E .); do
+    echo "=== $NODE ==="
+    ssh $NODE 'sudo podman exec -it hind sh -c "podman -r run --rm -it hello-world"'
+    echo
+  done
+}
