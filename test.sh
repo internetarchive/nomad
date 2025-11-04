@@ -242,6 +242,20 @@ function prodtest() {
   tags '[["https://services-scribe-c2.dev.archive.org"],[],["https://services-scribe-c2-reg.dev.archive.org"]]'
   ctags '[["https://canary-services-scribe-c2.dev.archive.org"]]'
 )
+(
+  banner repo use CI_MAIN_STYLE
+  BASE_DOMAIN=ext.archive.org
+  NOMAD_ADDR=https://ux-b.archive,org
+  NOMAD_VAR_HOSTNAMES='["esm"]'
+  CI_MAIN_STYLE=1
+  CI_PROJECT_PATH_SLUG=www-esm
+  CI_COMMIT_REF_SLUG=ext
+  expects 'nomad cluster https://ux-b.archive.org' \
+          'deploying to https://esm.ext.archive.org'
+  tags '[["https://esm.ext.archive.org"]]'
+  ctags '[["https://canary-esm.ext.archive.org"]]'
+  slug www-esm
+)
 
 
 # a bunch of quick, simple production deploy tests validating hostnames

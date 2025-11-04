@@ -25,6 +25,7 @@ function main() {
     CI_REGISTRY_TAG=${CI_REGISTRY_TAG:-""}
     CI_COMMIT_SHA=${CI_COMMIT_SHA:-""}
     NOMAD_VAR_BUILD_DEPLOY=${NOMAD_VAR_BUILD_DEPLOY:-""}
+    CI_MAIN_STYLE=${CI_MAIN_STYLE:-""}
   fi
 
   if [ "$NOMAD_VAR_BUILD_DEPLOY" ]; then
@@ -49,7 +50,7 @@ function main() {
   MAIN_OR_PROD_OR_STAGING_SLUG=
   PRODUCTION=
   STAGING=
-    if [ "$CI_COMMIT_REF_SLUG" = "main" -o "$CI_COMMIT_REF_SLUG" = "master" ]; then
+  if [ "$CI_COMMIT_REF_SLUG" = "main" -o "$CI_COMMIT_REF_SLUG" = "master" -o "$CI_MAIN_STYLE" ]; then
     MAIN_OR_PROD_OR_STAGING=1
     MAIN_OR_PROD_OR_STAGING_SLUG=1
   elif [ "$CI_COMMIT_REF_SLUG" = "production" ]; then
