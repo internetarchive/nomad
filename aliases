@@ -371,7 +371,7 @@ function nom-supervisor-status() {
 function nom-hello-world() {
   for NODE in $(nomad node status -t '{{range .}}{{.Name}}{{"\n"}}{{end}}' |sort |grep -E .); do
     echo "=== $NODE ==="
-    ssh $NODE 'sudo podman exec -it hind sh -c "podman -r run --rm -it hello-world"'
+    ssh $NODE 'sudo podman exec -it hind sh -c "podman -r run --rm -it docker.io/hello-world"'
     echo
   done
 }
