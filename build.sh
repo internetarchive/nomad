@@ -38,11 +38,17 @@ if [ "$NOMAD_VAR_BUILD_DEPLOY" ]; then
   PUSH_LATEST=
   export CI_REGISTRY_TAG=${CI_COMMIT_SHA}-deploy
   export DOCKERFILE_PATH=$NOMAD_VAR_BUILD_DEPLOY
+  # weirdly, if have a [build_deploy] job using "needs: [build]", the CI_APPLICATION_TAG will start
+  # becoming like "${CI_COMMIT_SHA}@sha256:..." (2nd part from gl_write_auto_build_variables_file())
+  # when [build_deploy] is running this build.sh script.  So reset it to what it should be.
+  export CI_APPLICATION_TAG=CI_REGISTRY_TAG
 fi
 
 if [[ -z "$CI_REGISTRY_TAG" ]]; then
   export CI_REGISTRY_TAG=$CI_COMMIT_SHA
 fi
+
+echo CI_APPLICATION_TAG=$CI_APPLICATION_TAG
 
 if [[ -z "$CI_COMMIT_TAG" ]]; then
   export CI_APPLICATION_REPOSITORY=${CI_APPLICATION_REPOSITORY:-$CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG}
@@ -51,6 +57,8 @@ else
   export CI_APPLICATION_REPOSITORY=${CI_APPLICATION_REPOSITORY:-$CI_REGISTRY_IMAGE}
   export CI_APPLICATION_TAG=${CI_APPLICATION_TAG:-$CI_COMMIT_TAG}
 fi
+
+echo CI_APPLICATION_TAG=$CI_APPLICATION_TAG
 
 DOCKER_BUILDKIT=1
 image_tagged="$CI_APPLICATION_REPOSITORY:$CI_APPLICATION_TAG"
