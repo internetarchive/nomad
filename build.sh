@@ -34,6 +34,8 @@ if [ "$NOMAD_VAR_SERVERLESS" != "" ]; then
   PUSH_LATEST=
 fi
 
+echo CI_APPLICATION_TAG=$CI_APPLICATION_TAG
+
 if [ "$NOMAD_VAR_BUILD_DEPLOY" ]; then
   PUSH_LATEST=
   export CI_REGISTRY_TAG=${CI_COMMIT_SHA}-deploy
@@ -41,8 +43,10 @@ if [ "$NOMAD_VAR_BUILD_DEPLOY" ]; then
   # weirdly, if have a [build_deploy] job using "needs: [build]", the CI_APPLICATION_TAG will start
   # becoming like "${CI_COMMIT_SHA}@sha256:..." (2nd part from gl_write_auto_build_variables_file())
   # when [build_deploy] is running this build.sh script.  So reset it to what it should be.
-  export CI_APPLICATION_TAG=CI_REGISTRY_TAG
+  export CI_APPLICATION_TAG=$CI_REGISTRY_TAG
 fi
+
+echo CI_APPLICATION_TAG=$CI_APPLICATION_TAG
 
 if [[ -z "$CI_REGISTRY_TAG" ]]; then
   export CI_REGISTRY_TAG=$CI_COMMIT_SHA
