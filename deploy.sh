@@ -169,6 +169,7 @@ function main() {
   #
   # Create project.hcl - including optional insertions that a repo might elect to inject
   REPODIR="$(pwd)"
+  ( pwd; ls $REPODIR ) # xxxx debugging
   cd /tmp
   if [ -e "$REPODIR/project.nomad" ]; then
     cp "$REPODIR/project.nomad" project.nomad
