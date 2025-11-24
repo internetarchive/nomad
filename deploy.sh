@@ -208,6 +208,7 @@ function main() {
   verbose "NOMAD_VAR_SLUG variable substitution"
   # Do the one current substitution nomad v1.0.3 can't do now (apparently a bug)
   sed -ix "s/NOMAD_VAR_SLUG/$NOMAD_VAR_SLUG/" project.hcl
+  sed -ix "s/NOMAD_VAR_SLUG/$NOMAD_VAR_SLUG/" /kv-setup.nomad
 
   if [[ "$NOMAD_ADDR" == *.archive.org ]]; then
     local NA=$(echo "$NOMAD_ADDR" |cut -f1 -d. |sed 's=^https://==')
@@ -224,22 +225,6 @@ function main() {
     # Use `podman` driver instead of `docker` (eg: HinD cluster(s) or other clusters)
     sed -ix 's/driver\s*=\s*"docker"/driver="podman"/'  project.hcl
     sed -ix 's/memory_hard_limit/# memory_hard_limit/'  project.hcl
-  fi
-
-  verbose "Handling NOMAD_SECRETS."
-  if [ "$NOMAD_SECRETS" = "" ]; then
-    # Set NOMAD_SECRETS to JSON encoded key/val hashmap of env vars starting w/ "NOMAD_SECRET_"
-    # (w/ NOMAD_SECRET_ prefix omitted), then convert to HCL style hashmap string (chars ":" => "=")
-    echo '{}' >| env.env
-    ( env | grep -qE ^NOMAD_SECRET_ )  &&  (
-      echo NOMAD_SECRETS=$(deno eval 'console.log(JSON.stringify(Object.fromEntries(Object.entries(Deno.env.toObject()).filter(([k, v]) => k.startsWith("NOMAD_SECRET_")).map(([k ,v]) => [k.replace(/^NOMAD_SECRET_/,""), v]))))' | sed 's/":"/"="/g') >| env.env
-    )
-  else
-    # this alternate clause allows GitHub Actions to send in repo secrets to us, as a single secret
-    # variable, as our JSON-like hashmap of keys (secret/env var names) and values
-    cat >| env.env << EOF
-NOMAD_SECRETS=$NOMAD_SECRETS
-EOF
   fi
 
 
@@ -280,7 +265,7 @@ EOF
 
 
   if [ "$NOMAD_TOKEN" = test ]; then
-    nomad run -output -var-file=env.env project.hcl >| project.json
+    nomad run -output project.hcl >| project.json
     exit 0
   fi
 
@@ -292,17 +277,17 @@ EOF
   NUM=$(grep -icE '^"(docker|podman)"$' drivers.txt |cat)
   if [ "$NUM" -lt 1 ]; then echo 'drivers not found?'; exit 1; fi
   # there should be 0 of either of these drivers in the HCL.
-  # NOTE: the `raw_exec` driver used only for secrets isn't in the `drivers.txt` list since we did
-  # *NOT* use `-var-file=env.env` (so the entire kv related `task` gets removed in `nomad run`).
   NUM=$(grep -icE '^"(exec|raw_exec)"$' drivers.txt |cat)
   if [ "$NUM" -ne 0 ]; then echo 'bad drivers in project'; exit 1; fi
   rm drivers.txt
   echo drivers validated
 
 
+  setup_secrets
+
   set -x
-  nomad validate -var-file=env.env project.hcl
-  nomad plan     -var-file=env.env project.hcl 2>&1 |sed 's/\(password[^ \t]*[ \t]*\).*/\1 ... /' |tee plan.log  ||  echo
+  nomad validate project.hcl
+  nomad plan     project.hcl 2>&1 |sed 's/\(password[^ \t]*[ \t]*\).*/\1 ... /' |tee plan.log  ||  echo
   local INDEX=$(grep -E -o -- '-check-index [0-9]+' plan.log |tr -dc 0-9)
 
   export JOB_VERSION=
@@ -310,7 +295,7 @@ EOF
   # some clusters sometimes fail to fetch deployment :( -- so let's retry 5x
   for RETRIES in $(seq 1 5); do
     set -o pipefail
-    nomad run    -var-file=env.env -check-index $INDEX project.hcl 2>&1 |tee check.log
+    nomad run -check-index $INDEX project.hcl 2>&1 |tee check.log
 
     if [ ! $JOB_VERSION ]; then
       # Determine the new 'Job Version' that *should be* going live if everything goes right.
@@ -345,6 +330,44 @@ EOF
     continue
   done
   exit 1
+}
+
+
+function setup_secrets() {
+  verbose "Handling NOMAD_SECRETS."
+  if [ "$NOMAD_SECRETS" = "" ]; then
+    # Set NOMAD_SECRETS to JSON encoded key/val hashmap of env vars starting w/ "NOMAD_SECRET_"
+    # (w/ NOMAD_SECRET_ prefix omitted), then convert to HCL style hashmap string (chars ":" => "=")
+    echo '{}' >| kv.env
+    ( env | grep -qE ^NOMAD_SECRET_ )  &&  (
+      echo NOMAD_SECRETS=$(deno eval 'console.log(JSON.stringify(Object.fromEntries(Object.entries(Deno.env.toObject()).filter(([k, v]) => k.startsWith("NOMAD_SECRET_")).map(([k ,v]) => [k.replace(/^NOMAD_SECRET_/,""), v]))))' | sed 's/":"/"="/g') >| kv.env
+    )
+  else
+    # this alternate clause allows GitHub Actions to send in repo secrets to us, as a single secret
+    # variable, as our JSON-like hashmap of keys (secret/env var names) and values
+    cat >| kv.env << EOF
+NOMAD_SECRETS=$NOMAD_SECRETS
+EOF
+  fi
+
+
+  set -x
+  nomad run -var-file=kv.env /kv-setup.nomad
+  set +x
+
+
+  (
+    # insert the kv verify prestart task into the main job (now that we've checked driver values)
+    grep -F -B10000 GROUP.NOMAD--INSERTS-HERE project.hcl
+    cat "/kv-verify.nomad"
+    grep -F -A10000 GROUP.NOMAD--INSERTS-HERE project.hcl
+  ) >| tmp.nomad
+  cp tmp.nomad project.hcl
+
+
+  # cleanup
+  nomad stop -purge kv-${NOMAD_VAR_SLUG}-kv
+  rm -f kv.env tmp.nomad
 }
 
 

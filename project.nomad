@@ -125,14 +125,6 @@ variable "VOLUMES" {
   default = []
 }
 
-variable "NOMAD_SECRETS" {
-  # This can be passed in via a GitHub Action, or
-  # is automatically populated with NOMAD_SECRET_ env vars from GitLab via deploy.sh in this dir.
-  type = map(string)
-  default = {}
-}
-
-
 locals {
   # Ignore all this.  really :)
 
@@ -161,10 +153,6 @@ locals {
   # Make [true] (array of length 1) if all docker password vars are ""
   docker_no_login = length(local.docker_pass) > 0 ? [] : [true]
 
-
-  # If job is using secrets and CI/CD Variables named like "NOMAD_SECRET_*" then set this
-  # string to a KEY=VAL line per CI/CD variable.  If job is not using secrets, set to "".
-  kv = join("\n", [for k, v in var.NOMAD_SECRETS : join("", concat([k, "='", v, "'"]))])
 
   volumes = concat(
     var.VOLUMES,
@@ -358,18 +346,15 @@ job "NOMAD_VAR_SLUG" {
         }
 
 
-        dynamic "template" {
+        template {
           # Secrets get stored in consul kv store, with the key [SLUG], when your project has set a
           # CI/CD variable like NOMAD_SECRET_[SOMETHING].
           # Setup the nomad job to dynamically pull secrets just before the container starts -
           # and insert them into the running container as environment variables.
-          for_each = slice(keys(var.NOMAD_SECRETS), 0, min(1, length(keys(var.NOMAD_SECRETS))))
-          content {
-            change_mode = "noop"
-            destination = "secrets/kv.env"
-            env         = true
-            data = "{{ key \"${var.SLUG}\" }}"
-          }
+          change_mode = "noop"
+          destination = "secrets/kv.env"
+          env         = true
+          data = "{{ key \"${var.SLUG}\" }}"
         }
 
         template {
@@ -385,26 +370,6 @@ CI_COMMIT_SHA=${var.CI_COMMIT_SHA}
           EOH
         }
       } # end "task"
-
-      dynamic "task" {
-        # When a job has CI/CD secrets - eg: CI/CD Variables named like "NOMAD_SECRET_..."
-        # then here is where we dynamically insert them into consul (as a single JSON k/v string).
-        # NOTE: 4/2023 we switch from "exec" after a jammy ubuntu VM had cgroup perms issues.
-        for_each = slice(keys(var.NOMAD_SECRETS), 0, min(1, length(keys(var.NOMAD_SECRETS))))
-        labels = ["kv"]
-        content {
-          driver = "raw_exec"
-          config {
-            command = "/usr/bin/consul"
-            args = [ "kv", "put", var.SLUG, local.kv ]
-          }
-          lifecycle {
-            hook = "prestart"
-            sidecar = false
-          }
-        }
-      }
-
       # GROUP.NOMAD--INSERTS-HERE
     }
   } # end dynamic "group"
