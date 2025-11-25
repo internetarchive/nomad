@@ -81,8 +81,6 @@ variables {
    */
   IS_BATCH = false
 
-  LEGACY_SERVICE_NAMES_URLPREFIX = false
-
   # There are more variables immediately after this - but they are "lists" or "maps" and need
   # special definitions to not have defaults or overrides be treated as strings.
 }
@@ -171,22 +169,13 @@ locals {
 
   legacy = var.CI_PROJECT_PATH_SLUG == "www-dweb-ipfs" ? true : (var.CI_PROJECT_PATH_SLUG == "www-dweb-webtorrent" ? true : false) # xxx
 
-  tags = var.LEGACY_SERVICE_NAMES_URLPREFIX ? merge(
-    {for portnum, portname in local.ports_extra_https: portname => [
-      # If the main deploy hostname is `card.example.com`, and a 2nd port is named `backend`,
-      # then make its hostname be `card-backend.example.com`
-      "urlprefix-${local.host0}-${portname}.${local.host0domain}"
-    ]},
-    {for portnum, portname in local.ports_extra_tcp: portname => [
-      "urlprefix-:${portnum} proto=tcp"
-    ]},
-  ) : merge(
+  tags = merge(
     {for portnum, portname in local.ports_extra_https: portname => [
       # If the main deploy hostname is `card.example.com`, and a 2nd port is named `backend`,
       # then make its hostname be `card-backend.example.com`
       local.legacy ? "https://${var.HOSTNAMES[0]}:${portnum}" : "https://${local.host0}-${portname}.${local.host0domain}" // xxx
     ]},
-    {for portnum, portname in local.ports_extra_tcp: portname => []},
+    {for portnum, portname in local.ports_extra_tcp: portname => []}
   )
 }
 
@@ -253,7 +242,7 @@ job "NOMAD_VAR_SLUG" {
         name = "${var.SLUG}"
         task = "http"
 
-        tags = [for HOST in var.HOSTNAMES: var.LEGACY_SERVICE_NAMES_URLPREFIX ? "urlprefix-${HOST}" : "https://${HOST}"]
+        tags = [for HOST in var.HOSTNAMES: "https://${HOST}"]
 
         canary_tags = [for HOST in var.HOSTNAMES: "https://canary-${HOST}"]
 

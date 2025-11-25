@@ -109,7 +109,7 @@ function prodtest() {
   expects 'nomad cluster https://prod.archive.org' \
           'deploying to https://avinfo.prod.archive.org' \
           'using nomad production token'
-  tags '[["urlprefix-avinfo.prod.archive.org"]]'
+  tags '[["https://avinfo.prod.archive.org"]]'
   ctags '[["https://canary-avinfo.prod.archive.org"]]'
   slug www-av-avinfo
 )
@@ -161,7 +161,7 @@ function prodtest() {
   expects 'nomad cluster https://prod.archive.org' \
           'deploying to https://plausible.prod.archive.org' \
           'using nomad production token'
-  tags '[["urlprefix-plausible.prod.archive.org"]]'
+  tags '[["https://plausible.prod.archive.org"]]'
   ctags '[["https://canary-plausible.prod.archive.org"]]'
 )
 (
@@ -223,9 +223,9 @@ function prodtest() {
   expects 'nomad cluster https://prod.archive.org' \
           'deploying to https://lcp.prod.archive.org' \
           'using nomad production token'
-  # NOTE: subtle -- with multiple ports (one thus one service per port), we expect 3 services
-  #       eacho with its own hostname
-  tags '[["urlprefix-lcp.prod.archive.org"],["urlprefix-:8989 proto=tcp"],["urlprefix-lcp-lsd.prod.archive.org"]]'
+  # NOTE: subtle -- with multiple ports (thus one service per port), we expect 2 services
+  #       each with its own hostname (the 3rd service is TCP only so gets ignored)
+  tags '[["https://lcp.prod.archive.org"],[],["https://lcp-lsd.prod.archive.org"]]'
   ctags '[["https://canary-lcp.prod.archive.org"]]'
 )
 (
