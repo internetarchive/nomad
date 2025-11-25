@@ -207,7 +207,6 @@ function main() {
   verbose "NOMAD_VAR_SLUG variable substitution"
   # Do the one current substitution nomad v1.0.3 can't do now (apparently a bug)
   sed -ix "s/NOMAD_VAR_SLUG/$NOMAD_VAR_SLUG/" project.hcl
-  sed -ix "s/NOMAD_VAR_SLUG/$NOMAD_VAR_SLUG/" /kv-setup.nomad
 
   if [[ "$NOMAD_ADDR" == *.archive.org ]]; then
     local NA=$(echo "$NOMAD_ADDR" |cut -f1 -d. |sed 's=^https://==')
@@ -348,6 +347,8 @@ NOMAD_SECRETS=$NOMAD_SECRETS
 EOF
   fi
 
+  # Do the one current substitution nomad v1.0.3 can't do now (apparently a bug)
+  sed -ix "s/NOMAD_VAR_SLUG/$NOMAD_VAR_SLUG/" /kv-setup.nomad
 
   set -x
   nomad run -var-file=kv.env /kv-setup.nomad
