@@ -167,13 +167,11 @@ locals {
   host0 = local.host0parts[0]
   host0domain = join(".", slice(local.host0parts, 1, length(local.host0parts)))
 
-  legacy = var.CI_PROJECT_PATH_SLUG == "www-dweb-ipfs" ? true : (var.CI_PROJECT_PATH_SLUG == "www-dweb-webtorrent" ? true : false) # xxx
-
   tags = merge(
     {for portnum, portname in local.ports_extra_https: portname => [
       # If the main deploy hostname is `card.example.com`, and a 2nd port is named `backend`,
       # then make its hostname be `card-backend.example.com`
-      local.legacy ? "https://${var.HOSTNAMES[0]}:${portnum}" : "https://${local.host0}-${portname}.${local.host0domain}" // xxx
+      "https://${local.host0}-${portname}.${local.host0domain}"
     ]},
     {for portnum, portname in local.ports_extra_tcp: portname => []}
   )
