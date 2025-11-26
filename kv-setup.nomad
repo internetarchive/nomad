@@ -47,4 +47,8 @@ job "kv-NOMAD_VAR_SLUG-kv" {
       }
     }
   }
+
+  meta {
+    randomly = uuidv4()
+  }
 }

@@ -76,7 +76,10 @@ variables {
         type = "batch"
         periodic {
             cron = "15 * * * * *"
-            prohibit_overlap = false  # must be false cause of kv env vars task
+
+            # suggested, good manners:
+            # https://developer.hashicorp.com/nomad/docs/job-specification/periodic#prohibit_overlap
+            prohibit_overlap = true
         }
    */
   IS_BATCH = false
