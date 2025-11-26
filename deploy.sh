@@ -272,10 +272,10 @@ function main() {
   nomad run -output project.hcl |jq '.. | .Driver? | select(. != null)' >| drivers.txt
   # there should be 1+ of either of these drivers in the HCL
   NUM=$(grep -icE '^"(docker|podman)"$' drivers.txt |cat)
-  if [ "$NUM" -lt 1 ]; then echo 'drivers not found?'; exit 1; fi
+  if [ "$NUM" -lt 1 ]; then echo; echo 'drivers not found?'; echo; exit 1; fi
   # there should be 0 of either of these drivers in the HCL.
   NUM=$(grep -icE '^"(exec|raw_exec)"$' drivers.txt |cat)
-  if [ "$NUM" -ne 0 ]; then echo 'bad drivers in project'; exit 1; fi
+  if [ "$NUM" -ne 0 ]; then echo; echo 'bad drivers in project'; echo; exit 2; fi
   rm drivers.txt
   echo drivers validated
 
@@ -290,7 +290,8 @@ function main() {
   export JOB_VERSION=
 
   # some clusters sometimes fail to fetch deployment :( -- so let's retry 5x
-  for RETRIES in $(seq 1 5); do
+  RETRY_NUMBER=5
+  for RETRIES in $(seq 1 $RETRY_NUMBER); do
     set -o pipefail
     nomad run -check-index $INDEX project.hcl 2>&1 |tee check.log
 
@@ -305,13 +306,17 @@ function main() {
 
     if [ "$?" = "0" ]; then
       if grep -E '^Status[ ]*=[ ]*failed' check.log; then
+        echo
         echo "FAIL: likely deploy was repeatedly unhealthy, unable to roll back, and ended up failing"
-        exit 1
+        echo
+        exit 3
       fi
 
       if [ "$JOB_VERSION" != "$JOB_VERSION_LAST" ]; then
+        echo
         echo "FAIL: likely deploy was repeatedly unhealthy and auto rolled back to a prior 'known good' deploy"
-        exit 1
+        echo
+        exit 4
       fi
 
       # This particular fail case output doesnt seem to exit non-zero -- so we have to check for it
@@ -326,7 +331,11 @@ function main() {
     sleep 10
     continue
   done
-  exit 1
+
+  echo
+  echo "FAIL: still no successful deploy after $RETRY_NUMBER retries"
+  echo
+  exit 5
 }
 
 
