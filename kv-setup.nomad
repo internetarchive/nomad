@@ -38,7 +38,7 @@ job "kv-NOMAD_VAR_SLUG-kv" {
       driver = "raw_exec"
       config {
         command = "bash"
-        args = ["-c", "/usr/bin/consul kv get -stale=false ${var.SLUG} >/dev/null && echo SUCCESS"]
+        args = ["-c", "/usr/bin/consul kv get -stale=false NOMAD_VAR_SLUG >/dev/null && echo SUCCESS"]
       }
       restart {
         attempts = 15
