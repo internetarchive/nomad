@@ -364,18 +364,9 @@ EOF
   set +x
 
 
-  (
-    # insert the kv verify prestart task into the main job (now that we've checked driver values)
-    grep -F -B10000 GROUP.NOMAD--INSERTS-HERE project.hcl
-    cat "/kv-verify.nomad"
-    grep -F -A10000 GROUP.NOMAD--INSERTS-HERE project.hcl
-  ) >| tmp.nomad
-  cp tmp.nomad project.hcl
-
-
   # cleanup
   nomad stop -purge kv-${NOMAD_VAR_SLUG}-kv
-  rm -f kv.env tmp.nomad
+  rm -f kv.env
 }
 
 

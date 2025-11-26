@@ -14,17 +14,37 @@ job "kv-NOMAD_VAR_SLUG-kv" {
   datacenters = ["dc1"]
   type = "batch"
   group "kv" {
-    task "kv" {
+
+    task "kv-put" {
       driver = "raw_exec"
       config {
         command = "/usr/bin/consul"
         args = [ "kv", "put", "NOMAD_VAR_SLUG", local.kv ]
       }
+      restart {
+        # basic restart policy in case consul is temporarily unavailable
+        attempts = 3
+        delay    = "5s"
+        mode     = "delay"
+      }
+    }
+
+    task "kv-verify" {
+      # Verify key exists with consistent read across all consul servers. Runs after kv-put succeeds.
       lifecycle {
-        hook = "prestart"
+        hook    = "poststart"
         sidecar = false
       }
-      # optional - add a 'restart' stanza
+      driver = "raw_exec"
+      config {
+        command = "bash"
+        args = ["-c", "/usr/bin/consul kv get -stale=false ${var.SLUG} >/dev/null && echo SUCCESS"]
+      }
+      restart {
+        attempts = 15
+        delay    = "2s"
+        mode     = "delay"
+      }
     }
   }
 }

@@ -16,6 +16,6 @@ WORKDIR /app
 COPY ci.yml .
 
 WORKDIR /
-COPY build.sh test.sh deploy.sh kv-setup.nomad kv-verify.nomad /
+COPY build.sh test.sh deploy.sh kv-setup.nomad /
 
 CMD ["/usr/sbin/caddy", "file-server", "-r=/app"]
