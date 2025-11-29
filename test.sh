@@ -132,13 +132,13 @@ function prodtest() {
   CI_PROJECT_NAME=av
   CI_COMMIT_REF_SLUG=main
   CI_PROJECT_PATH_SLUG=www-$CI_PROJECT_NAME
-  NOMAD_VAR_HOSTNAMES='["av1", "av2.dweb.me", "poohbot.com"]'
+  NOMAD_VAR_HOSTNAMES='["av1", "av2.dweb.me", "traceypooh.com"]'
   expects 'nomad cluster https://dev.archive.org' \
           'deploying to https://av1.dev.archive.org'
   # NOTE: subtle -- with multiple names to single port deploy, we expect a list of 3 hostnames
   #       applying to *one* service
-  tags '[["https://av1.dev.archive.org","https://av2.dweb.me","https://poohbot.com"]]'
-  ctags '[["https://canary-av1.dev.archive.org","https://canary-av2.dweb.me","https://canary-poohbot.com"]]'
+  tags '[["https://av1.dev.archive.org","https://av2.dweb.me","https://traceypooh.com"]]'
+  ctags '[["https://canary-av1.dev.archive.org","https://canary-av2.dweb.me","https://canary-traceypooh.com"]]'
 )
 (
   banner GL to dev, branch, so custom hostname ignored
