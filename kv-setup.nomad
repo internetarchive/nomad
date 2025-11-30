@@ -1,3 +1,6 @@
+variables {
+  NAMESPACE = "default"
+}
 variable "NOMAD_SECRETS" {
   # This can be passed in via a GitHub Action, or
   # is automatically populated with NOMAD_SECRET_ env vars from GitLab via deploy.sh in this dir.
@@ -13,6 +16,7 @@ locals {
 job "kv-NOMAD_VAR_SLUG-kv" {
   datacenters = ["dc1"]
   type = "batch"
+  namespace = "${var.NAMESPACE}"
   group "kv" {
 
     task "kv-put" {
