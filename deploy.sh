@@ -365,6 +365,8 @@ EOF
 
 
   # cleanup
+  env |sort |grep NAMESPACE
+  # export NOMAD_NAMESPACE=
   nomad stop -purge kv-${NOMAD_VAR_SLUG}-kv
   rm -f kv.env
 }
