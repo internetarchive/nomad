@@ -365,10 +365,14 @@ EOF
 
 
   # cleanup
-  env |sort |grep NAMESPACE
-  # export NOMAD_NAMESPACE=
-  nomad stop -purge kv-${NOMAD_VAR_SLUG}-kv
-  rm -f kv.env
+  (
+    if [ "$NOMAD_VAR_NAMESPACE" != "" ]; then
+      export NOMAD_NAMESPACE=$NOMAD_VAR_NAMESPACE
+    fi
+
+    nomad stop -purge kv-${NOMAD_VAR_SLUG}-kv
+    rm -f kv.env
+  )
 }
 
 

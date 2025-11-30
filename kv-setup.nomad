@@ -19,18 +19,6 @@ job "kv-NOMAD_VAR_SLUG-kv" {
   namespace = "${var.NAMESPACE}"
   group "kv" {
 
-    task "kv-debug" {
-      lifecycle {
-        hook    = "prestart"
-        sidecar = false
-      }
-      driver = "raw_exec"
-      config {
-        command = "echo"
-        args = ["NAMESPACE=", "${var.NAMESPACE}", "SLUG=", "NOMAD_VAR_SLUG"]
-      }
-    }
-
     task "kv-put" {
       driver = "raw_exec"
       config {
