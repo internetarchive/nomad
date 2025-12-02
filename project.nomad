@@ -204,165 +204,162 @@ job "NOMAD_VAR_SLUG" {
     }
   }
 
-  dynamic "group" {
-    for_each = [ "${var.SLUG}" ]
-    labels = ["${group.value}"]
-    content {
-      count = var.COUNT
+  group "group" {
+    count = var.COUNT
 
-      restart {
-        attempts = 3
-        delay    = "15s"
-        interval = "30m"
-        mode     = "fail"
-      }
-      network {
-        dynamic "port" {
-          # port.key == portnumber
-          # port.value == portname
-          for_each = local.ports_all
-          labels = [ "${port.value}" ]
-          content {
-            to = port.key
-          }
+    restart {
+      attempts = 3
+      delay    = "15s"
+      interval = "30m"
+      mode     = "fail"
+    }
+    network {
+      dynamic "port" {
+        # port.key == portnumber
+        # port.value == portname
+        for_each = local.ports_all
+        labels = [ "${port.value}" ]
+        content {
+          to = port.key
         }
       }
+    }
 
 
-      # The "service" stanza instructs Nomad to register this task as a service
-      # in the service discovery engine, which is currently Consul. This will
-      # make the service addressable after Nomad has placed it on a host and
-      # port.
-      #
-      # For more information and examples on the "service" stanza, please see
-      # the online documentation at:
-      #
-      #     https://www.nomadproject.io/docs/job-specification/service.html
-      #
-      service {
-        name = "${var.SLUG}"
-        task = "http"
+    # The "service" stanza instructs Nomad to register this task as a service
+    # in the service discovery engine, which is currently Consul. This will
+    # make the service addressable after Nomad has placed it on a host and
+    # port.
+    #
+    # For more information and examples on the "service" stanza, please see
+    # the online documentation at:
+    #
+    #     https://www.nomadproject.io/docs/job-specification/service.html
+    #
+    service {
+      name = "${var.SLUG}"
+      task = "http"
 
-        tags = [for HOST in var.HOSTNAMES: "https://${HOST}"]
+      tags = [for HOST in var.HOSTNAMES: "https://${HOST}"]
 
-        canary_tags = [for HOST in var.HOSTNAMES: "https://canary-${HOST}"]
+      canary_tags = [for HOST in var.HOSTNAMES: "https://canary-${HOST}"]
 
-        port = "http"
+      port = "http"
+      check {
+        name     = "alive"
+        type     = "${var.CHECK_PROTOCOL}"
+        path     = "${var.CHECK_PATH}"
+        port     = "http"
+        interval = "10s"
+        timeout  = "${var.CHECK_TIMEOUT}"
+        check_restart {
+          limit = 3  # auto-restart task when healthcheck fails 3x in a row
+
+          # give container (eg: having issues) custom time amount to stay up for debugging before
+          # 1st health check (eg: "3600s" value would be 1hr)
+          grace = "${var.HEALTH_TIMEOUT}"
+        }
+      }
+    }
+
+    dynamic "service" {
+      for_each = merge(local.ports_extra_https, local.ports_extra_tcp)
+      content {
+        # service.key == portnumber
+        # service.value == portname
+        name = "${var.SLUG}--${service.value}"
+        task = var.MULTI_CONTAINER ? service.value : "http"
+        # NOTE: Empty tags list if MULTI_CONTAINER (private internal ports like DB)
+        tags = var.MULTI_CONTAINER ? [] : local.tags[service.value]
+
+        port = "${service.value}"
         check {
           name     = "alive"
-          type     = "${var.CHECK_PROTOCOL}"
+          type     = "tcp"
           path     = "${var.CHECK_PATH}"
-          port     = "http"
+          port     = "${service.value}"
           interval = "10s"
           timeout  = "${var.CHECK_TIMEOUT}"
-          check_restart {
-            limit = 3  # auto-restart task when healthcheck fails 3x in a row
-
-            # give container (eg: having issues) custom time amount to stay up for debugging before
-            # 1st health check (eg: "3600s" value would be 1hr)
-            grace = "${var.HEALTH_TIMEOUT}"
-          }
+        }
+        check_restart {
+          grace = "${var.HEALTH_TIMEOUT}"
         }
       }
+    }
 
-      dynamic "service" {
-        for_each = merge(local.ports_extra_https, local.ports_extra_tcp)
+    task "http" {
+      driver = "docker"
+
+      # UGH - have to copy/paste this next block twice -- first for no docker login needed;
+      #       second for docker login needed (job spec will assemble in just one).
+      #       This is because we can't put dynamic content *inside* the 'config { .. }' stanza.
+      dynamic "config" {
+        for_each = local.docker_no_login
         content {
-          # service.key == portnumber
-          # service.value == portname
-          name = "${var.SLUG}--${service.value}"
-          task = var.MULTI_CONTAINER ? service.value : "http"
-          # NOTE: Empty tags list if MULTI_CONTAINER (private internal ports like DB)
-          tags = var.MULTI_CONTAINER ? [] : local.tags[service.value]
+          image = "${local.docker_image}"
+          image_pull_timeout = "20m"
+          network_mode = "${var.NETWORK_MODE}"
+          ports = local.ports_docker
+          volumes = local.volumes
+          force_pull = var.FORCE_PULL
+          memory_hard_limit = "${var.MEMORY * 10}" # NOTE: not podman driver compatible
+        }
+      }
+      dynamic "config" {
+        for_each = slice(local.docker_pass, 0, min(1, length(local.docker_pass)))
+        content {
+          image = "${local.docker_image}"
+          image_pull_timeout = "20m"
+          network_mode = "${var.NETWORK_MODE}"
+          ports = local.ports_docker
+          volumes = local.volumes
+          force_pull = var.FORCE_PULL
+          memory_hard_limit = "${var.MEMORY * 10}" # NOTE: not podman driver compatible
 
-          port = "${service.value}"
-          check {
-            name     = "alive"
-            type     = "tcp"
-            path     = "${var.CHECK_PATH}"
-            port     = "${service.value}"
-            interval = "10s"
-            timeout  = "${var.CHECK_TIMEOUT}"
-          }
-          check_restart {
-            grace = "${var.HEALTH_TIMEOUT}"
+          auth {
+            # server_address = "${var.CI_REGISTRY}"
+            username = local.docker_user
+            password = "${config.value}"
           }
         }
       }
 
-      task "http" {
-        driver = "docker"
-
-        # UGH - have to copy/paste this next block twice -- first for no docker login needed;
-        #       second for docker login needed (job spec will assemble in just one).
-        #       This is because we can't put dynamic content *inside* the 'config { .. }' stanza.
-        dynamic "config" {
-          for_each = local.docker_no_login
-          content {
-            image = "${local.docker_image}"
-            image_pull_timeout = "20m"
-            network_mode = "${var.NETWORK_MODE}"
-            ports = local.ports_docker
-            volumes = local.volumes
-            force_pull = var.FORCE_PULL
-            memory_hard_limit = "${var.MEMORY * 10}" # NOTE: not podman driver compatible
-          }
-        }
-        dynamic "config" {
-          for_each = slice(local.docker_pass, 0, min(1, length(local.docker_pass)))
-          content {
-            image = "${local.docker_image}"
-            image_pull_timeout = "20m"
-            network_mode = "${var.NETWORK_MODE}"
-            ports = local.ports_docker
-            volumes = local.volumes
-            force_pull = var.FORCE_PULL
-            memory_hard_limit = "${var.MEMORY * 10}" # NOTE: not podman driver compatible
-
-            auth {
-              # server_address = "${var.CI_REGISTRY}"
-              username = local.docker_user
-              password = "${config.value}"
-            }
-          }
-        }
-
-        resources {
-          # The MEMORY var now becomes a **soft limit**
-          # We will 10x that for a **hard limit**
-          cpu    = "${var.CPU}"
-          memory = "${var.MEMORY}"
-          memory_max = "${var.MEMORY * 10}"
-        }
+      resources {
+        # The MEMORY var now becomes a **soft limit**
+        # We will 10x that for a **hard limit**
+        cpu    = "${var.CPU}"
+        memory = "${var.MEMORY}"
+        memory_max = "${var.MEMORY * 10}"
+      }
 
 
-        template {
-          # Secrets get stored in consul kv store, with the key [SLUG], when your project has set a
-          # CI/CD variable like NOMAD_SECRET_[SOMETHING].
-          # Setup the nomad job to dynamically pull secrets just before the container starts -
-          # and insert them into the running container as environment variables.
-          change_mode = "noop"
-          destination = "secrets/kv.env"
-          env         = true
-          data = "{{ key \"${var.SLUG}\" }}"
-        }
+      template {
+        # Secrets get stored in consul kv store, with the key [SLUG], when your project has set a
+        # CI/CD variable like NOMAD_SECRET_[SOMETHING].
+        # Setup the nomad job to dynamically pull secrets just before the container starts -
+        # and insert them into the running container as environment variables.
+        change_mode = "noop"
+        destination = "secrets/kv.env"
+        env         = true
+        data = "{{ key \"${var.SLUG}\" }}"
+      }
 
-        template {
-          # Pass in useful hostname(s), repo & branch info to container's runtime as env vars
-          change_mode = "noop"
-          destination = "secrets/ci.env"
-          env         = true
-          data = <<EOH
+      template {
+        # Pass in useful hostname(s), repo & branch info to container's runtime as env vars
+        change_mode = "noop"
+        destination = "secrets/ci.env"
+        env         = true
+        data = <<EOH
 CI_HOSTNAME=${var.HOSTNAMES[0]}
 CI_COMMIT_REF_SLUG=${var.CI_COMMIT_REF_SLUG}
 CI_PROJECT_PATH_SLUG=${var.CI_PROJECT_PATH_SLUG}
 CI_COMMIT_SHA=${var.CI_COMMIT_SHA}
-          EOH
-        }
-      } # end "task"
-      # GROUP.NOMAD--INSERTS-HERE
-    }
-  } # end dynamic "group"
+        EOH
+      }
+    } # end task "http"
+
+    # GROUP.NOMAD--INSERTS-HERE
+  } # end group
 
 
   reschedule {
@@ -404,7 +401,6 @@ CI_COMMIT_SHA=${var.CI_COMMIT_SHA}
       randomly = uuidv4()
     }
   }
-
 
   # JOB.NOMAD--INSERTS-HERE
 } # end job
