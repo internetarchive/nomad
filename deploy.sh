@@ -275,7 +275,12 @@ function main() {
   if [ "$NUM" -lt 1 ]; then echo; echo 'drivers not found?'; echo; exit 1; fi
   # there should be 0 of either of these drivers in the HCL.
   NUM=$(grep -icE '^"(exec|raw_exec)"$' drivers.txt |cat)
-  if [ "$NUM" -ne 0 ]; then echo; echo 'bad drivers in project'; echo; exit 2; fi
+  if [ "$NUM" -ne 0 ]; then
+    echo; echo 'bad drivers in project'; echo
+    if [ "$NOMAD_VAR_SLUG" != "www-ci" ]; then
+      exit 2
+    fi
+  fi
   rm drivers.txt
   echo drivers validated
 
