@@ -360,6 +360,8 @@ function setup_secrets() {
     #   NOMAD_SECRET_B=999
     # would become string:
     #   A=888\nB=999\n
+    echo NS="[$NOMAD_SECRETS]" # xxx
+
     SECRETS=$(env |grep -E ^NOMAD_SECRET_ | sed 's/^NOMAD_SECRET_//')
   else
     # this alternate clause allows GitHub Actions to send in repo secrets to us, as a single secret
@@ -375,7 +377,7 @@ function setup_secrets() {
       export NOMAD_NAMESPACE=$NOMAD_VAR_NAMESPACE
     fi
     # project.nomad will use this in the `kv` task via `nomadVar`
-    nomad var put -force nomad/jobs/$NOMAD_VAR_SLUG "secrets=${SECRETS}"
+    nomad var put -out=no -force nomad/jobs/$NOMAD_VAR_SLUG "secrets=${SECRETS}"
   )
 }
 
@@ -384,7 +386,7 @@ function cleanup_secrets() {
     if [ "$NOMAD_VAR_NAMESPACE" != "" ]; then
       export NOMAD_NAMESPACE=$NOMAD_VAR_NAMESPACE
     fi
-    nomad var put -force nomad/jobs/$NOMAD_VAR_SLUG 'secrets=moved-to-consul-kv'
+    nomad var put -out=no -force nomad/jobs/$NOMAD_VAR_SLUG 'secrets=moved-to-consul-kv'
   )
 }
 
