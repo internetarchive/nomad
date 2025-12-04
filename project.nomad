@@ -358,6 +358,44 @@ CI_COMMIT_SHA=${var.CI_COMMIT_SHA}
       }
     } # end task "http"
 
+    task "kv" {
+      # deploy.sh previously did `nomad var put nomad/jobs/${var.SLUG} ..`
+      # So now copy that value over to `consul kv put`
+      # and after we deploy, deploy.sh can (effectively) clear the `nomad var` (for maximum opsec)
+      driver = "raw_exec"
+      lifecycle {
+        hook    = "prestart"
+        sidecar = false
+      }
+
+      template {
+        data = <<EOF
+#!/bin/bash -e
+{{- with nomadVar "nomad/jobs/${var.SLUG}" }}
+  {{- $secrets := index . "secrets" }}
+  {{- if eq (printf "%s" $secrets | trimSpace) "moved-to-consul-kv" }}
+    echo "ℹ Nomad var was cleared - our deploy will use existing consul kv value"
+  {{- else }}
+    cat <<EOFCONSUL | consul kv put ${var.SLUG} -
+{{ .secrets }}
+EOFCONSUL
+    echo "✓ Synced secrets to consul kv"
+  {{- end }}
+{{- else }}
+  echo "ℹ Nomad var not found - using existing consul kv value (or setting empty if missing, too)"
+  consul kv put -cas -modify-index=0 ${var.SLUG} '' || echo 'moving on..'
+{{- end }}
+EOF
+        destination = "local/sync.sh"
+        perms       = "755"
+      }
+
+      config {
+        command = "/bin/bash"
+        args    = ["local/sync.sh"]
+      }
+    }
+
     # GROUP.NOMAD--INSERTS-HERE
   } # end group
 

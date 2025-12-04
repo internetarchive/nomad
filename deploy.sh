@@ -272,14 +272,21 @@ function main() {
   nomad run -output project.hcl |jq '.. | .Driver? | select(. != null)' >| drivers.txt
   # there should be 1+ of either of these drivers in the HCL
   NUM=$(grep -icE '^"(docker|podman)"$' drivers.txt |cat)
-  if [ "$NUM" -lt 1 ]; then echo; echo 'drivers not found?'; echo; exit 1; fi
-  # there should be 0 of either of these drivers in the HCL.
-  NUM=$(grep -icE '^"(exec|raw_exec)"$' drivers.txt |cat)
+  if [ "$NUM" -lt 1 ]; then
+    echo; echo 'drivers not found?'; echo
+    exit 1
+  fi
+  # there should be 0 of these drivers in the HCL
+  NUM=$(grep -icE '^"(exec)"$' drivers.txt |cat)
   if [ "$NUM" -ne 0 ]; then
     echo; echo 'bad drivers in project'; echo
-    if [ "$NOMAD_VAR_SLUG" != "www-ci" ]; then
-      exit 2
-    fi
+    exit 2
+  fi
+  # there should be 1 of these drivers in the HCL (for the `kv` task)
+  NUM=$(grep -icE '^"(raw_exec)"$' drivers.txt |cat)
+  if [ "$NUM" -ne 1 ]; then
+    echo; echo 'bad drivers in project'; echo
+    exit 12
   fi
   rm drivers.txt
   echo drivers validated
@@ -328,6 +335,7 @@ function main() {
       #   ==> 2023-03-29T17:21:15Z: Error fetching deployment
       if ! grep -F 'Error fetching deployment' check.log; then
         echo deployed to https://$HOSTNAME
+        cleanup_secrets
         return
       fi
     fi
@@ -345,38 +353,38 @@ function main() {
 
 
 function setup_secrets() {
-  verbose "Handling NOMAD_SECRETS."
+  verbose "setup_secrets()"
   if [ "$NOMAD_SECRETS" = "" ]; then
-    # Set NOMAD_SECRETS to JSON encoded key/val hashmap of env vars starting w/ "NOMAD_SECRET_"
-    # (w/ NOMAD_SECRET_ prefix omitted), then convert to HCL style hashmap string (chars ":" => "=")
-    echo '{}' >| kv.env
-    ( env | grep -qE ^NOMAD_SECRET_ )  &&  (
-      echo NOMAD_SECRETS=$(deno eval 'console.log(JSON.stringify(Object.fromEntries(Object.entries(Deno.env.toObject()).filter(([k, v]) => k.startsWith("NOMAD_SECRET_")).map(([k ,v]) => [k.replace(/^NOMAD_SECRET_/,""), v]))))' | sed 's/":"/"="/g') >| kv.env
-    )
+    # normal pathway.  prepare secret env vars as multi-line string.  so env vars:
+    #   NOMAD_SECRET_A=888
+    #   NOMAD_SECRET_B=999
+    # would become string:
+    #   A=888\nB=999\n
+    SECRETS=$(env |grep -E ^NOMAD_SECRET_ | sed 's/^NOMAD_SECRET_//')
   else
     # this alternate clause allows GitHub Actions to send in repo secrets to us, as a single secret
-    # variable, as our JSON-like hashmap of keys (secret/env var names) and values
-    cat >| kv.env << EOF
-NOMAD_SECRETS=$NOMAD_SECRETS
-EOF
+    # variable, as our JSON-like hashmap of keys (secret/env var names) and values.  so env var:
+    #   NOMAD_SECRETS='{ "A"="888", "B"="999" }'
+    # would become string:
+    #   A='888'\nB='999'\n
+    SECRETS=$(deno eval 'for (const [k,v] of Object.entries(JSON.parse((Deno.env.get("NOMAD_SECRETS").  replace(/"="/g, `":"`))))) console.log(`${k}='"'"'${v}'"'"'`)')
   fi
 
-  # Do the one current substitution nomad v1.0.3 can't do now (apparently a bug)
-  sed -ix "s/NOMAD_VAR_SLUG/$NOMAD_VAR_SLUG/" /kv-setup.nomad
-
-  set -x
-  nomad run -var-file=kv.env /kv-setup.nomad
-  set +x
-
-
-  # cleanup
   (
     if [ "$NOMAD_VAR_NAMESPACE" != "" ]; then
       export NOMAD_NAMESPACE=$NOMAD_VAR_NAMESPACE
     fi
+    # project.nomad will use this in the `kv` task via `nomadVar`
+    nomad var put -force nomad/jobs/$NOMAD_VAR_SLUG "secrets=${SECRETS}"
+  )
+}
 
-    nomad stop -purge kv-${NOMAD_VAR_SLUG}-kv
-    rm -f kv.env
+function cleanup_secrets() {
+  (
+    if [ "$NOMAD_VAR_NAMESPACE" != "" ]; then
+      export NOMAD_NAMESPACE=$NOMAD_VAR_NAMESPACE
+    fi
+    nomad var put -force nomad/jobs/$NOMAD_VAR_SLUG 'secrets=moved-to-consul-kv'
   )
 }
 
