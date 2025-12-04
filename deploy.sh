@@ -289,8 +289,8 @@ function main() {
   setup_secrets
 
   set -x
-  nomad validate $RUN_ARGS project.hcl
-  nomad plan     $RUN_ARGS project.hcl 2>&1 |sed 's/\(password[^ \t]*[ \t]*\).*/\1 ... /' |tee plan.log  ||  echo
+  nomad validate project.hcl
+  nomad plan     project.hcl 2>&1 |sed 's/\(password[^ \t]*[ \t]*\).*/\1 ... /' |tee plan.log  ||  echo
   local INDEX=$(grep -E -o -- '-check-index [0-9]+' plan.log |tr -dc 0-9)
 
   export JOB_VERSION=
@@ -299,7 +299,7 @@ function main() {
   RETRY_NUMBER=5
   for RETRIES in $(seq 1 $RETRY_NUMBER); do
     set -o pipefail
-    nomad run -check-index $INDEX $RUN_ARGS project.hcl 2>&1 |tee check.log
+    nomad run -check-index $INDEX project.hcl 2>&1 |tee check.log
 
     if [ ! $JOB_VERSION ]; then
       # Determine the new 'Job Version' that *should be* going live if everything goes right.
@@ -364,12 +364,11 @@ function setup_secrets() {
     SECRETS=$(deno eval 'for (const [k,v] of Object.entries(JSON.parse((Deno.env.get("NOMAD_SECRETS").  replace(/"="/g, `":"`))))) console.log(`${k}='"'"'${v}'"'"'`)')
   fi
 
-  RUN_ARGS=
   if [ "$SECRETS" = "" ]; then
     return
   fi
 
-  RUN_ARGS='-var="HAS_SECRETS=[true]"'
+  export NOMAD_VAR_HAS_SECRETS='[true]'
   (
     if [ "$NOMAD_VAR_NAMESPACE" != "" ]; then
       export NOMAD_NAMESPACE=$NOMAD_VAR_NAMESPACE

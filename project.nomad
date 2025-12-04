@@ -127,6 +127,7 @@ variable "VOLUMES" {
 }
 
 variable "HAS_SECRETS" {
+  # this is a CI/CD system variable that gets set automatically when a deploy has secrets
   type = list(bool)
   default = []
 }
