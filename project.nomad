@@ -367,8 +367,8 @@ CI_COMMIT_SHA=${var.CI_COMMIT_SHA}
 
     dynamic "task" {
       for_each = var.HAS_SECRETS
+      labels = [ "kv" ]
       content {
-        name = "kv"
         # deploy.sh previously did `nomad var put nomad/jobs/${var.SLUG} ..`
         # So now copy that value over to `consul kv put`
         # and after we deploy, deploy.sh can (effectively) clear the `nomad var` (for maximum opsec)
