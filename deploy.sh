@@ -357,11 +357,11 @@ function setup_secrets() {
     SECRETS=$(env |grep -E ^NOMAD_SECRET_ | sed 's/^NOMAD_SECRET_//')
   else
     # this alternate clause allows GitHub Actions to send in repo secrets to us, as a single secret
-    # variable, as our JSON-like hashmap of keys (secret/env var names) and values.  so env var:
-    #   NOMAD_SECRETS='{ "A"="888", "B"="999" }'
+    # variable, as a JSON hashmap of keys (secret/env var names) and values.  so env var:
+    #   NOMAD_SECRETS='{ "A":"888", "B":"999" }'
     # would become string:
     #   A='888'\nB='999'\n
-    SECRETS=$(deno eval 'for (const [k,v] of Object.entries(JSON.parse((Deno.env.get("NOMAD_SECRETS").  replace(/"="/g, `":"`))))) console.log(`${k}='"'"'${v}'"'"'`)')
+    SECRETS=$(deno eval 'for (const [k,v] of Object.entries(JSON.parse((Deno.env.get("NOMAD_SECRETS"))))) console.log(`${k}='"'"'${v}'"'"'`)')
   fi
 
   if [ "$SECRETS" = "" ]; then
