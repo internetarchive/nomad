@@ -126,6 +126,11 @@ variable "VOLUMES" {
   default = []
 }
 
+variable "HAS_SECRETS" {
+  type = list(bool)
+  default = []
+}
+
 locals {
   # Ignore all this.  really :)
 
@@ -332,18 +337,6 @@ job "NOMAD_VAR_SLUG" {
         memory_max = "${var.MEMORY * 10}"
       }
 
-
-      template {
-        # Secrets get stored in consul kv store, with the key [SLUG], when your project has set a
-        # CI/CD variable like NOMAD_SECRET_[SOMETHING].
-        # Setup the nomad job to dynamically pull secrets just before the container starts -
-        # and insert them into the running container as environment variables.
-        change_mode = "noop"
-        destination = "secrets/kv.env"
-        env         = true
-        data = "{{ key \"${var.SLUG}\" }}"
-      }
-
       template {
         # Pass in useful hostname(s), repo & branch info to container's runtime as env vars
         change_mode = "noop"
@@ -356,20 +349,37 @@ CI_PROJECT_PATH_SLUG=${var.CI_PROJECT_PATH_SLUG}
 CI_COMMIT_SHA=${var.CI_COMMIT_SHA}
         EOH
       }
+
+      dynamic "template" {
+        for_each = var.HAS_SECRETS
+        content {
+          # Secrets get stored in consul kv store, with the key [SLUG], when your project has set a
+          # CI/CD variable like NOMAD_SECRET_[SOMETHING].
+          # Setup the nomad job to dynamically pull secrets just before the container starts -
+          # and insert them into the running container as environment variables.
+          change_mode = "noop"
+          destination = "secrets/kv.env"
+          env         = true
+          data = "{{ key \"${var.SLUG}\" }}"
+        }
+      }
     } # end task "http"
 
-    task "kv" {
-      # deploy.sh previously did `nomad var put nomad/jobs/${var.SLUG} ..`
-      # So now copy that value over to `consul kv put`
-      # and after we deploy, deploy.sh can (effectively) clear the `nomad var` (for maximum opsec)
-      driver = "raw_exec"
-      lifecycle {
-        hook    = "prestart"
-        sidecar = false
-      }
+    dynamic "task" {
+      for_each = var.HAS_SECRETS
+      content {
+        name = "kv"
+        # deploy.sh previously did `nomad var put nomad/jobs/${var.SLUG} ..`
+        # So now copy that value over to `consul kv put`
+        # and after we deploy, deploy.sh can (effectively) clear the `nomad var` (for maximum opsec)
+        driver = "raw_exec"
+        lifecycle {
+          hook    = "prestart"
+          sidecar = false
+        }
 
-      template {
-        data = <<EOF
+        template {
+          data = <<EOF
 #!/bin/bash -e
 {{- with nomadVar "nomad/jobs/${var.SLUG}" }}
   {{- $secrets := index . "secrets" }}
@@ -386,15 +396,16 @@ EOFCONSUL
   consul kv put -cas -modify-index=0 ${var.SLUG} '' || echo 'moving on..'
 {{- end }}
 EOF
-        destination = "local/sync.sh"
-        perms       = "755"
-      }
+          destination = "local/sync.sh"
+          perms       = "755"
+        }
 
-      config {
-        command = "/bin/bash"
-        args    = ["local/sync.sh"]
+        config {
+          command = "/bin/bash"
+          args    = ["local/sync.sh"]
+        }
       }
-    }
+    } # end task "kv"
 
     # GROUP.NOMAD--INSERTS-HERE
   } # end group
