@@ -371,7 +371,7 @@ function setup_secrets() {
   fi
 
   if [ "$SECRETS" = "" ]; then
-    SECRETS="''"
+    SECRETS="DEPLOYSECRETS=none"
   fi
 
   (
