@@ -40,11 +40,6 @@ function main() {
 
   ############################### NOMAD VARS SETUP ##############################
 
-  # auto-convert from pre-2022 var name
-  if [ "$BASE_DOMAIN" = "" ]; then
-    BASE_DOMAIN="$KUBE_INGRESS_BASE_DOMAIN"
-  fi
-
   MAIN_OR_PROD_OR_STAGING=
   MAIN_OR_PROD_OR_STAGING_SLUG=
   PRODUCTION=
@@ -95,6 +90,20 @@ function main() {
 
   export BASE_DOMAIN
 
+  if [ "$NOMAD_ADDR" = "" ]; then
+    export NOMAD_ADDR=https://$BASE_DOMAIN
+  fi
+
+  if [[ "$NOMAD_ADDR" == *.archive.org ]]; then
+    local NA=$(echo "$NOMAD_ADDR" |cut -f1 -d. |sed 's=^https://==')
+    NOMAD_VAR_DEPLOY_WITH_PODMAN=true
+    case "$NA" in
+      staging|prod)
+        NOMAD_VAR_DEPLOY_WITH_PODMAN=
+        ;;
+    esac
+  fi
+
 
   # Make a nice "slug" that is like [GROUP]-[PROJECT]-[BRANCH], each component also "slugged",
   # where "-main", "-master", "-production", "-staging" are omitted.
@@ -105,26 +114,13 @@ function main() {
   fi
   export NOMAD_VAR_SLUG=$(echo "${CI_PROJECT_PATH_SLUG}${BRANCH_PART}" |cut -b1-63 | sed 's/-$//')
   # make nice (semantic) hostname, based on the slug, eg:
-  #   services-timemachine.x.archive.org
-  #   ia-petabox-webdev-3939-fix-things.x.archive.org
+  #   services-timemachine.example.com
+  #   www-box-web-3939-fix-things.example.com
   # however, if repo has list of 1+ custom hostnames it wants to use instead for main/master branch
   # review app, then use them and log during [deploy] phase the first hostname in the list
   export HOSTNAME="${NOMAD_VAR_SLUG}.${BASE_DOMAIN}"
   # NOTE: YAML or CI/CD Variable `NOMAD_VAR_HOSTNAMES` is *IGNORED* -- and automatic $HOSTNAME above
   #       is used for branches not main/master/production/staging
-
-  # make even nicer names for archive.org processing cluster deploys
-  if [ "$BASE_DOMAIN" = "work.archive.org" ]; then
-    export HOSTNAME="${CI_PROJECT_NAME}${BRANCH_PART}.${BASE_DOMAIN}"
-  fi
-
-  if [ "$NOMAD_ADDR" = "" ]; then
-    export NOMAD_ADDR=https://$BASE_DOMAIN
-    if [ "$BASE_DOMAIN" = archive.org ]; then
-      # an archive.org specific adjustment
-      export NOMAD_ADDR=https://dev.archive.org
-    fi
-  fi
 
   if [ "$NOMAD_VAR_HOSTNAMES" != ""  -a  "$BASE_DOMAIN" != "" ]; then
     # Now auto-append .$BASE_DOMAIN to any hostname that isn't a fully qualified domain name
@@ -208,15 +204,6 @@ function main() {
   # Do the one current substitution nomad v1.0.3 can't do now (apparently a bug)
   sed -ix "s/NOMAD_VAR_SLUG/$NOMAD_VAR_SLUG/" project.hcl
 
-  if [[ "$NOMAD_ADDR" == *.archive.org ]]; then
-    local NA=$(echo "$NOMAD_ADDR" |cut -f1 -d. |sed 's=^https://==')
-    NOMAD_VAR_DEPLOY_WITH_PODMAN=true
-    case "$NA" in
-      staging|prod)
-        NOMAD_VAR_DEPLOY_WITH_PODMAN=
-        ;;
-    esac
-  fi
 
   if [ "$NOMAD_VAR_DEPLOY_WITH_PODMAN" = "true" ]; then
     # Use `podman` driver instead of `docker` (eg: HinD cluster(s) or other clusters)
