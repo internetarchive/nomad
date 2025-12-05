@@ -245,7 +245,7 @@ function prodtest() {
 (
   banner repo use CI_MAIN_STYLE
   BASE_DOMAIN=ext.archive.org
-  NOMAD_ADDR=https://ux-b.archive,org
+  NOMAD_ADDR=https://ux-b.archive.org
   NOMAD_VAR_HOSTNAMES='["esm"]'
   CI_MAIN_STYLE=1
   CI_PROJECT_PATH_SLUG=www-esm
