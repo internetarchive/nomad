@@ -51,12 +51,6 @@ function main() {
     PRODUCTION=1
     MAIN_OR_PROD_OR_STAGING=1
     MAIN_OR_PROD_OR_STAGING_SLUG=1
-  elif [ "$BASE_DOMAIN" = "prod.archive.org" ]; then
-    # NOTE: this is _very_ unusual -- but it's where a repo can elect to have
-    # another branch name (not `production`) deploy to production cluster via (typically) various
-    # gitlab CI/CD variables pegged to that branch name.
-    PRODUCTION=1
-    MAIN_OR_PROD_OR_STAGING=1
   elif [ "$CI_COMMIT_REF_SLUG" = "staging" ]; then
     STAGING=1
     MAIN_OR_PROD_OR_STAGING=1
@@ -66,6 +60,14 @@ function main() {
 
   # some archive.org specific production/staging deployment detection & var updates first
   if [[ "$BASE_DOMAIN" == *.archive.org ]]; then
+    if [ "$BASE_DOMAIN" = "prod.archive.org" ]; then
+      # NOTE: this is _very_ unusual -- but it's where a repo can elect to have
+      # another branch name (not `production`) deploy to production cluster via (typically) various
+      # gitlab CI/CD variables pegged to that branch name.
+      PRODUCTION=1
+      MAIN_OR_PROD_OR_STAGING=1
+    fi
+
     if [ $PRODUCTION ]; then
       export BASE_DOMAIN=prod.archive.org
     elif [ $STAGING ]; then
