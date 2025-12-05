@@ -58,37 +58,38 @@ function main() {
   fi
 
 
-  # some archive.org specific production/staging deployment detection & var updates first
-  if [[ "$BASE_DOMAIN" == *.archive.org ]]; then
-    if [ "$BASE_DOMAIN" = "prod.archive.org" ]; then
-      # NOTE: this is _very_ unusual -- but it's where a repo can elect to have
-      # another branch name (not `production`) deploy to production cluster via (typically) various
-      # gitlab CI/CD variables pegged to that branch name.
-      PRODUCTION=1
-      MAIN_OR_PROD_OR_STAGING=1
-    fi
+  # some specific production/staging deployment detection & var updates first
+  BASE_DOMAIN_FIRST=$(echo "$BASE_DOMAIN" |cut -d. -f1) # eg: 'dev.example.com' => 'dev'
+  BASE_DOMAIN_REST=$(echo "$BASE_DOMAIN" |cut -d. -f2-) # eg: 'dev.example.com' => 'example.com'
+  if [ "$BASE_DOMAIN_FIRST" = "prod" ]; then
+    # NOTE: this is _very_ unusual -- but it's where a repo can elect to have
+    # another branch name (not `production`) deploy to production cluster via (typically) various
+    # gitlab CI/CD variables pegged to that branch name.
+    PRODUCTION=1
+    MAIN_OR_PROD_OR_STAGING=1
+  fi
 
-    if [ $PRODUCTION ]; then
-      export BASE_DOMAIN=prod.archive.org
-    elif [ $STAGING ]; then
-      export BASE_DOMAIN=staging.archive.org
-    fi
+  if [ $PRODUCTION ]; then
+    export BASE_DOMAIN="prod.$BASE_DOMAIN_REST"
+  elif [ $STAGING ]; then
+    export BASE_DOMAIN="staging.$BASE_DOMAIN_REST"
+  fi
 
-    if [ $PRODUCTION ]; then
-      if [ "$NOMAD_TOKEN_PROD" != "" ]; then
-        export NOMAD_TOKEN="$NOMAD_TOKEN_PROD"
-        echo using nomad production token
-      fi
-      if [ "$NOMAD_VAR_COUNT" = "" ]; then
-        export NOMAD_VAR_COUNT=3
-      fi
-    elif [ $STAGING ]; then
-      if [ "$NOMAD_TOKEN_STAGING" != "" ]; then
-        export NOMAD_TOKEN="$NOMAD_TOKEN_STAGING"
-        echo using nomad staging token
-      fi
+  if [ $PRODUCTION ]; then
+    if [ "$NOMAD_TOKEN_PROD" != "" ]; then
+      export NOMAD_TOKEN="$NOMAD_TOKEN_PROD"
+      echo using nomad production token
+    fi
+    if [ "$NOMAD_VAR_COUNT" = "" ]; then
+      export NOMAD_VAR_COUNT=3
+    fi
+  elif [ $STAGING ]; then
+    if [ "$NOMAD_TOKEN_STAGING" != "" ]; then
+      export NOMAD_TOKEN="$NOMAD_TOKEN_STAGING"
+      echo using nomad staging token
     fi
   fi
+
 
   export BASE_DOMAIN
 
