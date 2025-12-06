@@ -99,11 +99,9 @@ function main() {
 
   if [[ "$NOMAD_ADDR" == *.archive.org ]]; then
     local NA=$(echo "$NOMAD_ADDR" |cut -f1 -d. |sed 's=^https://==')
-    NOMAD_VAR_DEPLOY_WITH_PODMAN=true
     case "$NA" in
-      staging|prod)
-        NOMAD_VAR_DEPLOY_WITH_PODMAN=
-        ;;
+      staging|prod) ;; # cluster uses docker
+      *) NOMAD_VAR_DEPLOY_WITH_PODMAN=true;; # cluster uses podman
     esac
   fi
 
