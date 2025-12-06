@@ -135,7 +135,8 @@ variables:
 #### Custom running container count from (default) 1 to 3
 You can run more than one container for increased reliability, more request processing, and more reliable uptimes (in the event of one or more Virtual Machines hosting containers having issues).
 
-For archive.org users, we suggest instead to switch your production deploy to our alternate production cluster.
+We suggest for deployments with 2+ containers,
+to switch your production deploy to an alternate production cluster.
 
 Keep in mind, you will have 2+ containers running simultaneously (_usually_, but not always, on different VMs).  So if your webapp uses any shared resources, like backends not in containers, or "persistent volumes", that you will need to think about concurrency, potentially multiple writers, etc. 😊
 ```yaml
@@ -247,8 +248,8 @@ Please see the top area of [project.nomad](project.nomad) for "Persistent Volume
 
 See also [this section](#optional-add-ons-to-your-project) below.
 
-### Deploying to production nomad cluster (archive.org only)
-Our production cluster has 3 VMs and will deploy your repo to a running container on each VM, using `haproxy` load balancer to balance requests.
+### Deploying to a production nomad cluster
+A production cluster will deploy your repo to a running container to multiple VMs, using a load balancer to balance requests.
 
 This should ensure much higher availability and handle more requests.
 
@@ -256,27 +257,25 @@ Keep in mind if your deployment uses a "persistent volume" or talks to other bac
 
 Setting up your repo to deploy to production is easy!
 
-- add a CI/CD Secret `NOMAD_TOKEN_PROD` with the nomad cluster value (ask tracey or scott)
+- add a CI/CD Secret `NOMAD_TOKEN_PROD` with the nomad cluster value (archive.org: ask tracey or scott)
   - make it: protected, masked, hidden
 ![Production CI/CD Secret](img/prod.jpg)
 - Make a new branch named `production` (presumably from your repo's latest `main` or `master` branch)
   - It should now deploy your project to a different `NOMAD_ADDR` url
-  - Your default hostname domain will change from `.dev.archive.org` to `.prod.archive.org`
+  - Your default hostname domain will change from `.something.example.com` to `.prod.example.com`
 - [GitLab only] - [Protect the `production` branch](https://docs.gitlab.com/ee/user/project/protected_branches.html)
   - suggest using same settings as your `main` or `master` (or default) branch
 ![Protect a branch](img/protect.jpg)
 
 
-### Deploying to staging nomad cluster (archive.org only)
-Our staging cluster will deploy your repo to a running container on one of its VMs.
+### Deploying to a staging nomad cluster
+Setting up your repo to deploy to staging is easy.
 
-Setting up your repo to deploy to staging is easy!
-
-- add a CI/CD Secret `NOMAD_TOKEN_STAGING` with the nomad cluster value (ask tracey or scott)
+- add a CI/CD Secret `NOMAD_TOKEN_STAGING` with the nomad cluster value (archive.org: ask tracey or scott)
   - make it: protected, masked, hidden (similar to `production` section above)
 - Make a new branch named `staging` (presumably from your repo's latest `main` or `master` branch)
   - It should now deploy your project to a different `NOMAD_ADDR` url
-  - Your default hostname domain will change from `.dev.archive.org` to `.staging.archive.org`
+  - Your default hostname domain will change from `.something.example.com` to `.staging.example.com`
 - [GitLab only] - [Protect the `staging` branch](https://docs.gitlab.com/ee/user/project/protected_branches.html)
   - suggest using same settings as your `main` or `master` (or default) branch, changing `production` to `staging` here:
 ![Protect a branch](img/protect.jpg)
@@ -510,7 +509,7 @@ You'd end up putting your 2nd `group` in a file named `job.nomad` in the top of 
 ![Architecture](img/architecture.drawio.svg)
 
 
-# Requirements for archive.org CI/CD
+# Requirements for CI/CD
 - docker exec ✅
   - pop into deployed container and poke around - similar to `ssh`
   - @see [aliases](aliases)  `nom-ssh`

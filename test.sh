@@ -65,7 +65,7 @@ function slug() {
 
 function prodtest() {
   CI_PROJECT_NAME=$(echo "$CI_PROJECT_PATH_SLUG" |cut -f2- -d-)
-  BASE_DOMAIN=${BASE_DOMAIN:-"prod.archive.org"} # default to prod.archive.org unless caller set it
+  BASE_DOMAIN=${BASE_DOMAIN:-"prod.example.com"} # default to prod.example.com unless caller set it
   NOMAD_TOKEN_PROD=test
   expects "deploying to https://$CI_HOSTNAME"
 }
@@ -75,105 +75,105 @@ function prodtest() {
 # NOTE: the GITHUB_* vars are normally auto-poplated in CI/CD GH Actions by GH (github)
 (
   banner GL to dev
-  BASE_DOMAIN=dev.archive.org
+  BASE_DOMAIN=dev.example.com
   CI_PROJECT_NAME=av
   CI_COMMIT_REF_SLUG=main
   CI_PROJECT_PATH_SLUG=www-$CI_PROJECT_NAME
-  expects 'nomad cluster https://dev.archive.org' \
-          'deploying to https://www-av.dev.archive.org'
-  tags '[["https://www-av.dev.archive.org"]]'
-  ctags '[["https://canary-www-av.dev.archive.org"]]'
+  expects 'nomad cluster https://dev.example.com' \
+          'deploying to https://www-av.dev.example.com'
+  tags '[["https://www-av.dev.example.com"]]'
+  ctags '[["https://canary-www-av.dev.example.com"]]'
   slug www-av
 )
 (
   banner GL to dev, custom hostname
-  BASE_DOMAIN=dev.archive.org
+  BASE_DOMAIN=dev.example.com
   CI_PROJECT_NAME=av
   CI_COMMIT_REF_SLUG=main
   CI_PROJECT_PATH_SLUG=www-$CI_PROJECT_NAME
   NOMAD_VAR_HOSTNAMES='["av"]'
-  expects 'nomad cluster https://dev.archive.org' \
-          'deploying to https://av.dev.archive.org'
-  tags '[["https://av.dev.archive.org"]]'
-  ctags '[["https://canary-av.dev.archive.org"]]'
+  expects 'nomad cluster https://dev.example.com' \
+          'deploying to https://av.dev.example.com'
+  tags '[["https://av.dev.example.com"]]'
+  ctags '[["https://canary-av.dev.example.com"]]'
   slug www-av
 )
 (
   echo GL to prod, via alt/unusual branch name, custom hostname
-  BASE_DOMAIN=prod.archive.org
+  BASE_DOMAIN=prod.example.com
   CI_PROJECT_NAME=av
   CI_COMMIT_REF_SLUG=avinfo
   CI_PROJECT_PATH_SLUG=www-$CI_PROJECT_NAME
   NOMAD_VAR_HOSTNAMES='["avinfo"]'
   NOMAD_TOKEN_PROD=test
-  expects 'nomad cluster https://prod.archive.org' \
-          'deploying to https://avinfo.prod.archive.org' \
+  expects 'nomad cluster https://prod.example.com' \
+          'deploying to https://avinfo.prod.example.com' \
           'using nomad production token'
-  tags '[["https://avinfo.prod.archive.org"]]'
-  ctags '[["https://canary-avinfo.prod.archive.org"]]'
+  tags '[["https://avinfo.prod.example.com"]]'
+  ctags '[["https://canary-avinfo.prod.example.com"]]'
   slug www-av-avinfo
 )
 (
   echo GL to prod, via alt/unusual branch name, custom hostname
-  BASE_DOMAIN=prod.archive.org
+  BASE_DOMAIN=prod.example.com
   CI_PROJECT_NAME=plausible
   CI_COMMIT_REF_SLUG=plausible-ait
   CI_PROJECT_PATH_SLUG=services-$CI_PROJECT_NAME
   NOMAD_VAR_HOSTNAMES='["plausible-ait"]'
   NOMAD_TOKEN_PROD=test
-  expects 'nomad cluster https://prod.archive.org' \
-          'deploying to https://plausible-ait.prod.archive.org' \
+  expects 'nomad cluster https://prod.example.com' \
+          'deploying to https://plausible-ait.prod.example.com' \
           'using nomad production token'
 )
 (
   echo GL to dev, branch, so custom hostname ignored
   banner GL to dev, w/ 2+ custom hostnames
-  BASE_DOMAIN=dev.archive.org
+  BASE_DOMAIN=dev.example.com
   CI_PROJECT_NAME=av
   CI_COMMIT_REF_SLUG=main
   CI_PROJECT_PATH_SLUG=www-$CI_PROJECT_NAME
   NOMAD_VAR_HOSTNAMES='["av1", "av2.dweb.me", "traceypooh.com"]'
-  expects 'nomad cluster https://dev.archive.org' \
-          'deploying to https://av1.dev.archive.org'
+  expects 'nomad cluster https://dev.example.com' \
+          'deploying to https://av1.dev.example.com'
   # NOTE: subtle -- with multiple names to single port deploy, we expect a list of 3 hostnames
   #       applying to *one* service
-  tags '[["https://av1.dev.archive.org","https://av2.dweb.me","https://traceypooh.com"]]'
-  ctags '[["https://canary-av1.dev.archive.org","https://canary-av2.dweb.me","https://canary-traceypooh.com"]]'
+  tags '[["https://av1.dev.example.com","https://av2.dweb.me","https://traceypooh.com"]]'
+  ctags '[["https://canary-av1.dev.example.com","https://canary-av2.dweb.me","https://canary-traceypooh.com"]]'
 )
 (
   banner GL to dev, branch, so custom hostname ignored
-  BASE_DOMAIN=dev.archive.org
+  BASE_DOMAIN=dev.example.com
   CI_PROJECT_NAME=av
   CI_COMMIT_REF_SLUG=tofu
   CI_PROJECT_PATH_SLUG=www-$CI_PROJECT_NAME
   NOMAD_VAR_HOSTNAMES='["av"]'
-  expects 'nomad cluster https://dev.archive.org' \
-          'deploying to https://www-av-tofu.dev.archive.org'
+  expects 'nomad cluster https://dev.example.com' \
+          'deploying to https://www-av-tofu.dev.example.com'
   slug www-av-tofu
 )
 (
   banner GL to prod
-  BASE_DOMAIN=dev.archive.org
+  BASE_DOMAIN=dev.example.com
   CI_PROJECT_NAME=plausible
   CI_COMMIT_REF_SLUG=production
   CI_PROJECT_PATH_SLUG=services-$CI_PROJECT_NAME
   NOMAD_TOKEN_PROD=test
-  expects 'nomad cluster https://prod.archive.org' \
-          'deploying to https://plausible.prod.archive.org' \
+  expects 'nomad cluster https://prod.example.com' \
+          'deploying to https://plausible.prod.example.com' \
           'using nomad production token'
-  tags '[["https://plausible.prod.archive.org"]]'
-  ctags '[["https://canary-plausible.prod.archive.org"]]'
+  tags '[["https://plausible.prod.example.com"]]'
+  ctags '[["https://canary-plausible.prod.example.com"]]'
 )
 (
   banner GL to prod, custom hostname
-  BASE_DOMAIN=dev.archive.org
+  BASE_DOMAIN=dev.example.com
   CI_PROJECT_NAME=plausible
   CI_COMMIT_REF_SLUG=production
   CI_PROJECT_PATH_SLUG=services-$CI_PROJECT_NAME
-  NOMAD_VAR_HOSTNAMES='["plausible-ait.prod.archive.org"]'
+  NOMAD_VAR_HOSTNAMES='["plausible-ait.prod.example.com"]'
   NOMAD_TOKEN_PROD=test
-  expects 'nomad cluster https://prod.archive.org' \
-          'deploying to https://plausible-ait.prod.archive.org' \
+  expects 'nomad cluster https://prod.example.com' \
+          'deploying to https://plausible-ait.prod.example.com' \
           'using nomad production token'
 )
 (
@@ -181,79 +181,79 @@ function prodtest() {
   GITHUB_ACTIONS=1
   GITHUB_REPOSITORY=internetarchive/emularity-engine
   GITHUB_REF_NAME=main
-  BASE_DOMAIN=ux-b.archive.org
+  BASE_DOMAIN=ux-b.example.com
   NOMAD_VAR_HOSTNAMES='["emularity-engine"]'
-  expects 'nomad cluster https://ux-b.archive.org' \
-          'deploying to https://emularity-engine.ux-b.archive.org'
+  expects 'nomad cluster https://ux-b.example.com' \
+          'deploying to https://emularity-engine.ux-b.example.com'
 )
 (
   banner "GL repo using 'main' branch to be like 'production'"
-  BASE_DOMAIN=prod.archive.org
+  BASE_DOMAIN=prod.example.com
   CI_PROJECT_NAME=offshoot
   CI_COMMIT_REF_SLUG=main
   CI_PROJECT_PATH_SLUG=www-$CI_PROJECT_NAME
   NOMAD_TOKEN_PROD=test
   NOMAD_VAR_HOSTNAMES='["offshoot"]'
-  expects 'nomad cluster https://prod.archive.org' \
-          'deploying to https://offshoot.prod.archive.org'
+  expects 'nomad cluster https://prod.example.com' \
+          'deploying to https://offshoot.prod.example.com'
   slug www-offshoot
 )
 (
   banner GL repo using one TCP-only port and 2+ ports/names, to dev
-  BASE_DOMAIN=dev.archive.org
+  BASE_DOMAIN=dev.example.com
   CI_PROJECT_NAME=lcp
   CI_COMMIT_REF_SLUG=main
   CI_PROJECT_PATH_SLUG=services-$CI_PROJECT_NAME
   NOMAD_VAR_PORTS='{ 9999 = "http" , -8989 = "lcp", 8990 = "lsd" }'
-  expects 'nomad cluster https://dev.archive.org' \
-          'deploying to https://services-lcp.dev.archive.org'
+  expects 'nomad cluster https://dev.example.com' \
+          'deploying to https://services-lcp.dev.example.com'
   # NOTE: subtle -- with multiple ports (one thus one service per port), we expect 3 services
   #       eacho with its own hostname
-  tags '[["https://services-lcp.dev.archive.org"],[],["https://services-lcp-lsd.dev.archive.org"]]'
-  ctags '[["https://canary-services-lcp.dev.archive.org"]]'
+  tags '[["https://services-lcp.dev.example.com"],[],["https://services-lcp-lsd.dev.example.com"]]'
+  ctags '[["https://canary-services-lcp.dev.example.com"]]'
 )
 (
   banner GL repo using one TCP-only port and 2+ ports/names, to prod
-  BASE_DOMAIN=dev.archive.org
+  BASE_DOMAIN=dev.example.com
   CI_PROJECT_NAME=lcp
   CI_COMMIT_REF_SLUG=production
   CI_PROJECT_PATH_SLUG=services-$CI_PROJECT_NAME
   NOMAD_VAR_PORTS='{ 9999 = "http" , -8989 = "lcp", 8990 = "lsd" }'
   NOMAD_TOKEN_PROD=test
-  expects 'nomad cluster https://prod.archive.org' \
-          'deploying to https://lcp.prod.archive.org' \
+  expects 'nomad cluster https://prod.example.com' \
+          'deploying to https://lcp.prod.example.com' \
           'using nomad production token'
   # NOTE: subtle -- with multiple ports (thus one service per port), we expect 2 services
   #       each with its own hostname (the 3rd service is TCP only so gets ignored)
-  tags '[["https://lcp.prod.archive.org"],[],["https://lcp-lsd.prod.archive.org"]]'
-  ctags '[["https://canary-lcp.prod.archive.org"]]'
+  tags '[["https://lcp.prod.example.com"],[],["https://lcp-lsd.prod.example.com"]]'
+  ctags '[["https://canary-lcp.prod.example.com"]]'
 )
 (
   banner GL repo using one TCP-only port and 2+ ports/names
-  BASE_DOMAIN=dev.archive.org
+  BASE_DOMAIN=dev.example.com
   CI_PROJECT_NAME=scribe-c2
   CI_COMMIT_REF_SLUG=main
   CI_PROJECT_PATH_SLUG=services-$CI_PROJECT_NAME
   NOMAD_VAR_PORTS='{ 9999 = "http" , -7777 = "tcp", 8889 = "reg" }'
-  expects 'nomad cluster https://dev.archive.org' \
-          'deploying to https://services-scribe-c2.dev.archive.org'
+  expects 'nomad cluster https://dev.example.com' \
+          'deploying to https://services-scribe-c2.dev.example.com'
   # NOTE: subtle -- with multiple ports (one thus one service per port), we'd normally expect 3 services
   #       eacho with its own hostname -- but one is TCP so the middle Service gets an *empty* list of tags.
-  tags '[["https://services-scribe-c2.dev.archive.org"],[],["https://services-scribe-c2-reg.dev.archive.org"]]'
-  ctags '[["https://canary-services-scribe-c2.dev.archive.org"]]'
+  tags '[["https://services-scribe-c2.dev.example.com"],[],["https://services-scribe-c2-reg.dev.example.com"]]'
+  ctags '[["https://canary-services-scribe-c2.dev.example.com"]]'
 )
 (
   banner repo use CI_MAIN_STYLE
-  BASE_DOMAIN=ext.archive.org
-  NOMAD_ADDR=https://ux-b.archive.org
+  BASE_DOMAIN=ext.example.com
+  NOMAD_ADDR=https://ux-b.example.com
   NOMAD_VAR_HOSTNAMES='["esm"]'
   CI_MAIN_STYLE=1
   CI_PROJECT_PATH_SLUG=www-esm
   CI_COMMIT_REF_SLUG=ext
-  expects 'nomad cluster https://ux-b.archive.org' \
-          'deploying to https://esm.ext.archive.org'
-  tags '[["https://esm.ext.archive.org"]]'
-  ctags '[["https://canary-esm.ext.archive.org"]]'
+  expects 'nomad cluster https://ux-b.example.com' \
+          'deploying to https://esm.ext.example.com'
+  tags '[["https://esm.ext.example.com"]]'
+  ctags '[["https://canary-esm.ext.example.com"]]'
   slug www-esm
 )
 
@@ -262,155 +262,155 @@ function prodtest() {
 (
   CI_PROJECT_PATH_SLUG=services-article-exchange
   CI_COMMIT_REF_SLUG=production
-  CI_HOSTNAME=article-exchange.prod.archive.org
+  CI_HOSTNAME=article-exchange.prod.example.com
   prodtest
 )
 (
   CI_PROJECT_PATH_SLUG=services-atlas
   CI_COMMIT_REF_SLUG=production
-  CI_HOSTNAME=atlas.prod.archive.org
+  CI_HOSTNAME=atlas.prod.example.com
   prodtest
 )
 (
   CI_PROJECT_PATH_SLUG=services-bwhogs
   CI_COMMIT_REF_SLUG=production
-  CI_HOSTNAME=bwhogs.prod.archive.org
+  CI_HOSTNAME=bwhogs.prod.example.com
   prodtest
 )
 (
   CI_PROJECT_PATH_SLUG=services-ids-logic
   CI_COMMIT_REF_SLUG=production
-  CI_HOSTNAME=ids-logic.prod.archive.org
+  CI_HOSTNAME=ids-logic.prod.example.com
   prodtest
 )
 (
   CI_PROJECT_PATH_SLUG=services-lcp
   CI_COMMIT_REF_SLUG=production
-  CI_HOSTNAME=lcp.prod.archive.org
+  CI_HOSTNAME=lcp.prod.example.com
   prodtest
 )
 (
   CI_PROJECT_PATH_SLUG=services-microfilmmonitor
   CI_COMMIT_REF_SLUG=production
-  CI_HOSTNAME=microfilmmonitor.prod.archive.org
+  CI_HOSTNAME=microfilmmonitor.prod.example.com
   prodtest
 )
 (
   CI_PROJECT_PATH_SLUG=services-oclc-ill
   CI_COMMIT_REF_SLUG=production
-  CI_HOSTNAME=oclc-ill.prod.archive.org
+  CI_HOSTNAME=oclc-ill.prod.example.com
   prodtest
 )
 (
   CI_PROJECT_PATH_SLUG=services-odyssey
   CI_COMMIT_REF_SLUG=production
-  CI_HOSTNAME=odyssey.prod.archive.org
+  CI_HOSTNAME=odyssey.prod.example.com
   prodtest
 )
 (
   CI_PROJECT_PATH_SLUG=services-opds
   CI_COMMIT_REF_SLUG=production
-  CI_HOSTNAME=opds.prod.archive.org
+  CI_HOSTNAME=opds.prod.example.com
   prodtest
 )
 (
   CI_PROJECT_PATH_SLUG=services-plausible
   CI_COMMIT_REF_SLUG=production
-  CI_HOSTNAME=plausible.prod.archive.org
+  CI_HOSTNAME=plausible.prod.example.com
   prodtest
 )
 (
   CI_PROJECT_PATH_SLUG=services-rapid-slackbot
   CI_COMMIT_REF_SLUG=production
-  CI_HOSTNAME=rapid-slackbot.prod.archive.org
+  CI_HOSTNAME=rapid-slackbot.prod.example.com
   prodtest
 )
 (
   CI_PROJECT_PATH_SLUG=services-scribe-serial-helper
   CI_COMMIT_REF_SLUG=production
-  CI_HOSTNAME=scribe-serial-helper.prod.archive.org
+  CI_HOSTNAME=scribe-serial-helper.prod.example.com
   prodtest
 )
 (
   CI_PROJECT_PATH_SLUG=www-av
   CI_COMMIT_REF_SLUG=production
-  CI_HOSTNAME=av.prod.archive.org
+  CI_HOSTNAME=av.prod.example.com
   prodtest
 )
 (
   CI_PROJECT_PATH_SLUG=www-bookserver
   CI_COMMIT_REF_SLUG=production
-  CI_HOSTNAME=bookserver.prod.archive.org
+  CI_HOSTNAME=bookserver.prod.example.com
   prodtest
 )
 (
   CI_PROJECT_PATH_SLUG=www-iiif
   CI_COMMIT_REF_SLUG=production
-  CI_HOSTNAME=iiif.prod.archive.org
+  CI_HOSTNAME=iiif.prod.example.com
   prodtest
 )
 (
   CI_PROJECT_PATH_SLUG=www-nginx
   CI_COMMIT_REF_SLUG=production
-  CI_HOSTNAME=nginx.prod.archive.org
+  CI_HOSTNAME=nginx.prod.example.com
   prodtest
 )
 (
   CI_PROJECT_PATH_SLUG=www-rendertron
   CI_COMMIT_REF_SLUG=production
-  CI_HOSTNAME=rendertron.prod.archive.org
+  CI_HOSTNAME=rendertron.prod.example.com
   prodtest
 )
 
 
 # a bunch of quick, _custom HOSTNAMES_, production deploy tests validating hostnames
 (
-  NOMAD_VAR_HOSTNAMES='["popcorn.archive.org"]'
+  NOMAD_VAR_HOSTNAMES='["popcorn.example.com"]'
   CI_PROJECT_PATH_SLUG=www-popcorn
   CI_COMMIT_REF_SLUG=production
-  CI_HOSTNAME=popcorn.archive.org
+  CI_HOSTNAME=popcorn.example.com
   prodtest
 )
 (
-  NOMAD_VAR_HOSTNAMES='["polyfill.archive.org"]'
+  NOMAD_VAR_HOSTNAMES='["polyfill.example.com"]'
   CI_PROJECT_PATH_SLUG=www-polyfill-io-production
   CI_COMMIT_REF_SLUG=production
-  CI_HOSTNAME=polyfill.archive.org
+  CI_HOSTNAME=polyfill.example.com
   prodtest
 )
 (
-  NOMAD_VAR_HOSTNAMES='["purl.archive.org"]'
+  NOMAD_VAR_HOSTNAMES='["purl.example.com"]'
   CI_PROJECT_PATH_SLUG=www-purl
   CI_COMMIT_REF_SLUG=production
-  CI_HOSTNAME=purl.archive.org
+  CI_HOSTNAME=purl.example.com
   prodtest
 )
 (
-  NOMAD_VAR_HOSTNAMES='["esm.archive.org"]'
+  NOMAD_VAR_HOSTNAMES='["esm.example.com"]'
   CI_PROJECT_PATH_SLUG=www-esm
   CI_COMMIT_REF_SLUG=production
-  CI_HOSTNAME=esm.archive.org
+  CI_HOSTNAME=esm.example.com
   prodtest
 )
 (
-  NOMAD_VAR_HOSTNAMES='["cantaloupe.prod.archive.org"]'
+  NOMAD_VAR_HOSTNAMES='["cantaloupe.prod.example.com"]'
   CI_PROJECT_PATH_SLUG=services-ia-iiif-cantaloupe-experiment
   CI_COMMIT_REF_SLUG=production
-  CI_HOSTNAME=cantaloupe.prod.archive.org
+  CI_HOSTNAME=cantaloupe.prod.example.com
   prodtest
 )
 (
-  NOMAD_VAR_HOSTNAMES='["plausible-ait.prod.archive.org"]'
+  NOMAD_VAR_HOSTNAMES='["plausible-ait.prod.example.com"]'
   CI_PROJECT_PATH_SLUG=services-plausible
   CI_COMMIT_REF_SLUG=production-ait
-  CI_HOSTNAME=plausible-ait.prod.archive.org
+  CI_HOSTNAME=plausible-ait.prod.example.com
   prodtest
 )
 (
   NOMAD_VAR_HOSTNAMES='["parse_dates"]'
   CI_PROJECT_PATH_SLUG=services-parse-dates
   CI_COMMIT_REF_SLUG=production
-  CI_HOSTNAME=parse_dates.prod.archive.org
+  CI_HOSTNAME=parse_dates.prod.example.com
   prodtest
 )
 
