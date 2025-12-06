@@ -11,8 +11,8 @@ variables {
   # NOTE: see `project.nomad` in this dir if your registry image is private and needs to login
 
   # Switch this, locally edit your /etc/hosts, or otherwise.  as is, webapp will appear at:
-  #   https://internetarchive-hello-js-main.x.archive.org/
-  BASE_DOMAIN = "x.archive.org"
+  #   https://internetarchive-hello-js-main.x.example.com/
+  BASE_DOMAIN = "x.example.com"
 }
 
 job "hello-world" {
