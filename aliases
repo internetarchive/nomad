@@ -358,6 +358,29 @@ function nom-deploys-check() {
   nomad status --namespace '*' |grep -Fv running
 }
 
+
+function nom-deploys-check-only() {
+  # admin script that more thoroughly finds and prints out any deploys with any kind of issues
+  # this one doesnt do `nomad system gc` and has an alternate approach
+  curl -sH "X-Nomad-Token: ${NOMAD_TOKEN?}" "${NOMAD_ADDR?}/v1/jobs?namespace=*" \
+    |jq  . \
+    |grep -E '"Name":|"Status":' \
+    |grep -B1 Status \
+    |grep -v '"running"' \
+    |grep -B1 '"Status"' \
+    |grep -v /periodic-1 \
+    |grep -A1 '"Name"' \
+    |tac \
+    |perl -ne 'chop; print; print "\n" if m/"Name"/;' \
+    |perl -pe 's/"Name"//g' \
+    |cut -f2- -d: \
+    |tr -d '":,' \
+    |perl -pe 's/^\s+//; s/ +/ /g' \
+    |tr ' ' '\t' \
+    |sort
+}
+
+
 function nom-supervisor-status() {
   # admin script that shows the supervisord status of all jobs in each HinD cluster's VMs
   # requires `ssh` access to each VM that is running HinD
