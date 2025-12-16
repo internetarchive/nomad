@@ -16,6 +16,6 @@ WORKDIR /app
 COPY ci.yml .
 
 WORKDIR /
-COPY build.sh test.sh deploy.sh /
+COPY build.sh test.sh deploy.sh project.nomad /
 
 CMD ["/usr/sbin/caddy", "file-server", "-r=/app"]

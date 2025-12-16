@@ -167,10 +167,10 @@ function main() {
   REPODIR="$(pwd)"
   cd /tmp
   if [ -e "$REPODIR/project.nomad" ]; then
-    cp "$REPODIR/project.nomad" project.nomad
+    cp "$REPODIR/project.nomad" .
   else
     rm -f project.nomad
-    wget -q https://raw.githubusercontent.com/internetarchive/nomad/refs/heads/main/project.nomad
+    cp /project.nomad .
   fi
 
   verbose "Replacing variables internal to project.nomad."
