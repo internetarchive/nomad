@@ -75,6 +75,14 @@ build_args=(
   --tag "$image_tagged"
 )
 
+# If any of these are defined (for example via a self-hosted gitlab runner config.toml)
+# pass them into the container for when it's building.
+# This way, you dont have set these vars in all your repos' Dockerfile.
+build_args+=(--env HTTPS_PROXY)
+build_args+=(--env HTTP_PROXY)
+build_args+=(--env NO_PROXY)
+
+
 if [ $PUSH_LATEST ]; then
   build_args+=(--tag "$image_latest")
 fi
