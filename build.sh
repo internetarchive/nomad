@@ -75,15 +75,15 @@ build_args=(
   --tag "$image_tagged"
 )
 
-# If any of these are defined (for example via a self-hosted gitlab runner config.toml)
+# If any of these 5 env vars are defined (for example via a self-hosted gitlab runner config.toml)
 # pass them into the container for when it's building.
 # This way, you dont have to set these vars in all your repos' Dockerfile.
-build_args+=(--env PIP_INDEX_URL)
-build_args+=(--env PIP_TRUSTED_HOST)
-build_args+=(--env NO_PROXY)
 if [[ -n "$HTTPS_PROXY" && -n "$NOMAD_SECRET_PROXYUP" ]]; then
-  # special case for a repo, where we should auto-insert $NOMAD_SECRET_PROXYUP, eg:
-  #   HTTPS_PROXY=http://${NOMAD_SECRET_PROXYUP}${HTTPS_PROXY}
+  # special case for a repo, where we should auto-insert $NOMAD_SECRET_PROXYUP.  So inputs:
+  #   HTTPS_PROXY=http://proxy.example.com
+  #   NOMAD_SECRET_PROXYUP=user:pass@
+  # would yield:
+  #   HTTPS_PROXY=http://user:pass@proxy.example.com
   P1=$(echo "$HTTPS_PROXY" |cut -f1 -d/)
   P2=$(echo "$HTTPS_PROXY" |cut -f3 -d/)
   build_args+=(--env HTTPS_PROXY="${P1}//${NOMAD_SECRET_PROXYUP}${P2}")
@@ -97,6 +97,9 @@ if [[ -n "$HTTP_PROXY" && -n "$NOMAD_SECRET_PROXYUP" ]]; then
 else
   build_args+=(--env HTTP_PROXY)
 fi
+build_args+=(--env NO_PROXY)
+build_args+=(--env PIP_INDEX_URL)
+build_args+=(--env PIP_TRUSTED_HOST)
 
 
 if [ $PUSH_LATEST ]; then
