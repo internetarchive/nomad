@@ -78,6 +78,8 @@ build_args=(
 # If any of these are defined (for example via a self-hosted gitlab runner config.toml)
 # pass them into the container for when it's building.
 # This way, you dont have to set these vars in all your repos' Dockerfile.
+build_args+=(--env PIP_INDEX_URL)
+build_args+=(--env PIP_TRUSTED_HOST)
 build_args+=(--env NO_PROXY)
 if [[ -n "$HTTPS_PROXY" && -n "$NOMAD_SECRET_PROXYUP" ]]; then
   # special case for a repo, where we should auto-insert $NOMAD_SECRET_PROXYUP, eg:
