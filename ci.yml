@@ -54,9 +54,9 @@ build_deploy:
     - if: '$NOMAD_VAR_BUILD_DEPLOY && $CI_COMMIT_BRANCH'
 
 
-# a repo using NOMAD_SECRET_PROXYUP can have a test phase that does: `extends: .test`
-# to run this to adjust the HTTPS_PROXY related vars for test jobs if needed.
-.test:
+# a repo using NOMAD_SECRET_PROXYUP can have a test phase that does: `extends: .test-proxy-auth`
+# to run this to adjust the HTTPS_PROXY related vars for test jobs, if needed.
+.test-proxy-auth:
   stage: test
   before_script:
     - |
