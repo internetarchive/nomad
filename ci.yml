@@ -53,6 +53,27 @@ build_deploy:
       when: never
     - if: '$NOMAD_VAR_BUILD_DEPLOY && $CI_COMMIT_BRANCH'
 
+
+# a repo using NOMAD_SECRET_PROXYUP can have a test phase that does: `extends: .test`
+# to run this to adjust the HTTPS_PROXY related vars for test jobs if needed.
+.test:
+  stage: test
+  before_script:
+    - |
+      # Setup authenticated proxy if credentials available
+      if [[ -n "$NOMAD_SECRET_PROXYUP" && -n "$HTTPS_PROXY" ]]; then
+        P1=$(echo "$HTTPS_PROXY" | cut -f1 -d/)
+        P2=$(echo "$HTTPS_PROXY" | cut -f3 -d/)
+        export HTTPS_PROXY="${P1}//${NOMAD_SECRET_PROXYUP}${P2}"
+        export HTTP_PROXY="${P1}//${NOMAD_SECRET_PROXYUP}${P2}"
+        echo "✓ Authenticated proxy configured"
+      fi
+  rules:
+    - if: "$TEST_DISABLED"
+      when: never
+    - if: "$CI_COMMIT_BRANCH"
+
+
 deploy:
   stage: deploy
   script:
