@@ -77,10 +77,24 @@ build_args=(
 
 # If any of these are defined (for example via a self-hosted gitlab runner config.toml)
 # pass them into the container for when it's building.
-# This way, you dont have set these vars in all your repos' Dockerfile.
-build_args+=(--env HTTPS_PROXY)
-build_args+=(--env HTTP_PROXY)
+# This way, you dont have to set these vars in all your repos' Dockerfile.
 build_args+=(--env NO_PROXY)
+if [[ -n "$HTTPS_PROXY" && -n "$NOMAD_SECRET_PROXYUP" ]]; then
+  # special case for a repo, where we should auto-insert $NOMAD_SECRET_PROXYUP, eg:
+  #   HTTPS_PROXY=http://${NOMAD_SECRET_PROXYUP}${HTTPS_PROXY}
+  P1=$(echo "$HTTPS_PROXY" |cut -f1 -d/)
+  P2=$(echo "$HTTPS_PROXY" |cut -f3 -d/)
+  build_args+=(--env HTTPS_PROXY="${P1}//${NOMAD_SECRET_PROXYUP}${P2}")
+else
+  build_args+=(--env HTTPS_PROXY)
+fi
+if [[ -n "$HTTP_PROXY" && -n "$NOMAD_SECRET_PROXYUP" ]]; then
+  P1=$(echo "$HTTP_PROXY" |cut -f1 -d/)
+  P2=$(echo "$HTTP_PROXY" |cut -f3 -d/)
+  build_args+=(--env HTTP_PROXY="${P1}//${NOMAD_SECRET_PROXYUP}${P2}")
+else
+  build_args+=(--env HTTP_PROXY)
+fi
 
 
 if [ $PUSH_LATEST ]; then
