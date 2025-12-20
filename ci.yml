@@ -16,7 +16,9 @@
 # NOTE: changes to *this* repo, will fire off GitHub Actions here:
 #   https://github.com/internetarchive/nomad/blob/main/.github/workflows/cicd.yml
 # which will re/make this container image:
-image: ghcr.io/internetarchive/nomad:main
+image:
+  name: ghcr.io/internetarchive/nomad:main
+  pull_policy: if-not-present
 
 stages:
   - build
