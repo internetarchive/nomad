@@ -199,7 +199,7 @@ job "NOMAD_VAR_SLUG" {
     for_each = local.service_type
     content {
       # https://learn.hashicorp.com/tutorials/nomad/job-rolling-update
-      max_parallel  = 1
+      max_parallel  = "${var.COUNT}"
       # https://learn.hashicorp.com/tutorials/nomad/job-blue-green-and-canary-deployments
       canary = var.COUNT_CANARIES
       auto_promote  = local.auto_promote
@@ -432,7 +432,7 @@ EOF
   dynamic "migrate" {
     for_each = local.service_type
     content {
-      max_parallel = 3
+      max_parallel = "${var.COUNT}"
       health_check = "checks"
       min_healthy_time = "15s"
       healthy_deadline = "10m"
