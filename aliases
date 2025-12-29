@@ -343,15 +343,16 @@ function nom-deploys-check() {
   nomad system gc
   sleep 1.5
   clear -x
-  echo 'Task Group                                                      Version  Desired  Status   Created    Modified'
-  ( for i in $(nomad node status |grep -Fv Eligibility |cut -f1 -d' '); do
-      nomad node status --namespace '*' -short $i \
-        |grep -E '^Name|run' \
-        |grep -Fv running \
-        |perl -pe 's/^[^ ]+ +[^ ]+ +//'
-  done ) \
-    |grep -Ev '^[^ ]+$' -B1
-    # NOTE:👆🏽 final grep is to show any nomad server names (that have deploys with issues)
+  echo 'Desired\tStatus\tJob'
+	for node in $(nomad node status |grep -Fv Eligibility |cut -f1 -d' '); do
+    (
+      node_name=$(nomad node status -short "$node" | awk '/^Name/ {print $3}')
+      echo "=== Node: $node_name ($node) ==="
+      curl -sH "Content-Type: application/json" -H "X-Nomad-Token: $NOMAD_TOKEN" \
+        $NOMAD_ADDR/v1/node/$node/allocations \
+          |jq -r '.[] | [.DesiredStatus, .ClientStatus, .JobID] | @tsv'
+    ) | grep -pEv '^run\trunning\t' -B1
+  done
 
   line
 
