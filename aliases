@@ -119,7 +119,18 @@ function nom-cp() {
     [   $MAIN ]  &&  RSYNC=true
     [ ! $MAIN ]  &&  [ "$RSYNC_BRANCHES" ]  &&  RSYNC=true
 
-    [ $RSYNC ] && { set +e; set -x; rsync "$@"; RSYNC_EXIT=$?; set +x; set -e; }
+    echo "$@"
+
+    if [ $RSYNC ]; then
+      # Create remote directory if needed
+      local RSYNC_DEST="${@: -1}"
+      if [[ "$RSYNC_DEST" == *:* ]]; then
+        local RSYNC_HOST="${RSYNC_DEST%%:*}"
+        local RSYNC_DIR="$(dirname "${RSYNC_DEST#*:}")"
+        ssh "$RSYNC_HOST" "mkdir -p '$RSYNC_DIR'"
+      fi
+      set +e; set -x; rsync "$@"; RSYNC_EXIT=$?; set +x; set -e
+    fi
 
     # this is a special exception project where we DONT want to ALSO copy file to nomad deploy
     [ $MAIN ]  &&  [ "$JOB" = "ia-petabox" ]  &&  [ ! $NOM_CP_PETABOX_MAIN ]  &&  exit 0
@@ -131,6 +142,10 @@ function nom-cp() {
     echo 'has this branch run a full pipeline and deployed a Review App yet?'
     return
   fi
+
+  # Create remote directory if needed
+  local REST_DIR=$(dirname "$REST")
+  [ "$REST_DIR" != "." ] && nomad alloc exec -task $TASK "$ALLOC" sh -c "mkdir -p '$REST_DIR'"
 
   # HinD updated nomad clusters w/ latest nomad seem to *not* get the stdin close properly
   # (and thus hang).  So timeout/kill after 2s :( tracey 2024/3 )
