@@ -144,7 +144,7 @@ function nom-cp() {
     return
   fi
 
-  # Create destination directory inside the container before piping the file in,
+  # Create destination directory inside the container before piping the file in
   local REST_DIR=$(dirname "$REST")
   [ "$REST_DIR" != "." ] && nomad alloc exec -task $TASK "$ALLOC" sh -c "mkdir -p '$REST_DIR'"
 
