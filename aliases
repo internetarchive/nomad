@@ -122,11 +122,12 @@ function nom-cp() {
     echo "$@"
 
     if [ $RSYNC ]; then
-      # Create remote directory if needed
+      # Parse host:path from rsync destination and mkdir -p via ssh,
+      # since rsync won't create intermediate directories on its own.
       local RSYNC_DEST="${@: -1}"
       if [[ "$RSYNC_DEST" == *:* ]]; then
-        local RSYNC_HOST="${RSYNC_DEST%%:*}"
-        local RSYNC_DIR="$(dirname "${RSYNC_DEST#*:}")"
+        local RSYNC_HOST="${RSYNC_DEST%%:*}"   # strip longest match of :* from end
+        local RSYNC_DIR="$(dirname "${RSYNC_DEST#*:}")"  # strip shortest match of *: from start
         ssh "$RSYNC_HOST" "mkdir -p '$RSYNC_DIR'"
       fi
       set +e; set -x; rsync "$@"; RSYNC_EXIT=$?; set +x; set -e
@@ -143,7 +144,7 @@ function nom-cp() {
     return
   fi
 
-  # Create remote directory if needed
+  # Create destination directory inside the container before piping the file in,
   local REST_DIR=$(dirname "$REST")
   [ "$REST_DIR" != "." ] && nomad alloc exec -task $TASK "$ALLOC" sh -c "mkdir -p '$REST_DIR'"
 
