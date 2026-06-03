@@ -292,6 +292,15 @@ function main() {
   for RETRIES in $(seq 1 $RETRY_NUMBER); do
     set -o pipefail
     nomad run -check-index $INDEX project.hcl 2>&1 |tee check.log
+    NOMAD_EXIT=$?
+
+    if [ "$IS_PERIODIC" ]; then
+      if [ "$NOMAD_EXIT" = "0" ]; then
+        echo deployed periodic job $NOMAD_VAR_SLUG
+        cleanup_secrets
+        return
+      fi
+    fi
 
     if [ ! $JOB_VERSION ]; then
       # Determine the new 'Job Version' that *should be* going live if everything goes right.
@@ -302,13 +311,7 @@ function main() {
 
     JOB_VERSION_LAST=$(grep -oE '^Job Version[ ]*=[ ]*[0-9]*' check.log |rev |cut -f1 -d' ' |rev |tail -1)
 
-    if [ "$?" = "0" ]; then
-      if [ "$IS_PERIODIC" ]; then
-        echo deployed periodic job $NOMAD_VAR_SLUG
-        cleanup_secrets
-        return
-      fi
-
+    if [ "$NOMAD_EXIT" = "0" ]; then
       if grep -E '^Status[ ]*=[ ]*failed' check.log; then
         echo
         echo "FAIL: likely deploy was repeatedly unhealthy, unable to roll back, and ended up failing"
