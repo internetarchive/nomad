@@ -307,7 +307,7 @@ function main() {
       export JOB_VERSION=$(grep -oE '^Job Version[ ]*=[ ]*[0-9]*' check.log |rev |cut -f1 -d' ' |rev |head -1)
     fi
 
-    JOB_VERSION_LAST=$(grep -oE '^Job Version[ ]*=[ ]*[0-9]*' check.log |rev |cut -f1 -d' ' |rev |tail -1)
+    export JOB_VERSION_LAST=$(grep -oE '^Job Version[ ]*=[ ]*[0-9]*' check.log |rev |cut -f1 -d' ' |rev |tail -1)
 
     if [ "$NOMAD_EXIT" = "0" ]; then
       if grep -E '^Status[ ]*=[ ]*failed' check.log; then
