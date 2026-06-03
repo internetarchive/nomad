@@ -15,6 +15,7 @@ function main() {
     NOMAD_VAR_HOSTNAMES=${NOMAD_VAR_HOSTNAMES:-""}
     CI_REGISTRY_READ_TOKEN=${CI_REGISTRY_READ_TOKEN:-""}
     NOMAD_VAR_COUNT=${NOMAD_VAR_COUNT:-""}
+    NOMAD_VAR_IS_BATCH=${NOMAD_VAR_IS_BATCH:-""}
     NOMAD_SECRETS=${NOMAD_SECRETS:-""}
     NOMAD_ADDR=${NOMAD_ADDR:-""}
     NOMAD_TOKEN_PROD=${NOMAD_TOKEN_PROD:-""}
@@ -283,10 +284,6 @@ function main() {
 
   export JOB_VERSION=
 
-  # Periodic/cron jobs register successfully but create no deployment object to monitor
-  IS_PERIODIC=
-  if grep -qE '^\s*periodic\s*\{' project.hcl; then IS_PERIODIC=1; fi
-
   # some clusters sometimes fail to fetch deployment :( -- so let's retry 5x
   RETRY_NUMBER=5
   for RETRIES in $(seq 1 $RETRY_NUMBER); do
@@ -294,8 +291,9 @@ function main() {
     nomad run -check-index $INDEX project.hcl 2>&1 |tee check.log
     NOMAD_EXIT=$?
 
-    if [ "$IS_PERIODIC" ]; then
+    if [ "$NOMAD_VAR_IS_BATCH" ]; then
       if [ "$NOMAD_EXIT" = "0" ]; then
+        # Periodic/cron jobs register successfully but create no deployment object to monitor
         echo deployed periodic job $NOMAD_VAR_SLUG
         cleanup_secrets
         return
