@@ -283,6 +283,10 @@ function main() {
 
   export JOB_VERSION=
 
+  # Periodic/cron jobs register successfully but create no deployment object to monitor
+  IS_PERIODIC=
+  if grep -qE '^\s*periodic\s*\{' project.hcl; then IS_PERIODIC=1; fi
+
   # some clusters sometimes fail to fetch deployment :( -- so let's retry 5x
   RETRY_NUMBER=5
   for RETRIES in $(seq 1 $RETRY_NUMBER); do
@@ -299,6 +303,12 @@ function main() {
     JOB_VERSION_LAST=$(grep -oE '^Job Version[ ]*=[ ]*[0-9]*' check.log |rev |cut -f1 -d' ' |rev |tail -1)
 
     if [ "$?" = "0" ]; then
+      if [ "$IS_PERIODIC" ]; then
+        echo deployed periodic job $NOMAD_VAR_SLUG
+        cleanup_secrets
+        return
+      fi
+
       if grep -E '^Status[ ]*=[ ]*failed' check.log; then
         echo
         echo "FAIL: likely deploy was repeatedly unhealthy, unable to roll back, and ended up failing"
