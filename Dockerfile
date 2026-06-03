@@ -1,4 +1,4 @@
-FROM denoland/deno:alpine-2.8.0
+FROM denoland/deno:alpine-2.6.0
 
 # add `nomad`
 RUN mkdir -m777 /usr/local/sbin  && \
