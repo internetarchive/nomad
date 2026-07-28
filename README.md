@@ -29,13 +29,11 @@ Uses:
   - (archive.org admins will often have set this already for you at the group-level)
 - simply make your project have this simple `.gitlab-ci.yml` in top-level dir:
 ```yaml
-include:
-  - remote: 'https://nomad.archive.org/ci.yml'
+include: 'https://nomad.archive.org/ci.yml'
 ```
 *OR*
 ```yaml
-include:
-  - remote: 'https://raw.githubusercontent.com/internetarchive/nomad/refs/heads/main/ci.yml'
+include: 'https://raw.githubusercontent.com/internetarchive/nomad/refs/heads/main/ci.yml'
 ```
 
 - if you want a [test] phase, you can add this to the `.gitlab-ci.yml` file above:
@@ -407,8 +405,7 @@ variables:
   NOMAD_VAR_COUNT: 1
   NOMAD_VAR_COUNT_CANARIES: 0
 
-include:
-  - remote: 'https://raw.githubusercontent.com/internetarchive/nomad/refs/heads/main/ci.yml'
+include: 'https://nomad.archive.org/ci.yml'
 ```
 `vars.nomad`:
 ```ini
