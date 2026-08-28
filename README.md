@@ -70,6 +70,7 @@ NOMAD_VAR_MULTI_CONTAINER
 NOMAD_VAR_NAMESPACE
 NOMAD_VAR_NETWORK_MODE
 NOMAD_VAR_NO_DEPLOY
+NOMAD_VAR_NO_PUSH_LATEST
 NOMAD_VAR_PERSISTENT_VOLUME
 NOMAD_VAR_PORTS
 NOMAD_VAR_SERVERLESS
@@ -233,6 +234,13 @@ The `:latest` tag will get tagged & pushed *after* all CI tests have succeeded.
 ```yaml
 variables:
   NOMAD_VAR_SERVERLESS: 'true'
+```
+
+#### Never `docker tag`/push a `:latest` tag at all
+This is a *very rare* need — for example a repo where some other automated process expects the `:latest` tag to never move, or never exist, in the registry. Setting this skips pushing `:latest` entirely, regardless of `NOMAD_VAR_SERVERLESS` above.
+```yaml
+variables:
+  NOMAD_VAR_NO_PUSH_LATEST: 'true'
 ```
 
 

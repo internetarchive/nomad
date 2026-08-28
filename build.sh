@@ -34,6 +34,11 @@ if [ "$NOMAD_VAR_SERVERLESS" != "" ]; then
   PUSH_LATEST=
 fi
 
+# very rare: force-disable pushing the `:latest` tag, even for repos that would otherwise get one
+if [ "$NOMAD_VAR_NO_PUSH_LATEST" != "" ]; then
+  PUSH_LATEST=
+fi
+
 if [ "$NOMAD_VAR_BUILD_DEPLOY" ]; then
   PUSH_LATEST=
   export CI_REGISTRY_TAG=${CI_COMMIT_SHA}-deploy
