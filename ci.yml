@@ -105,7 +105,13 @@ deploy-serverless:
       set -x
       image_tagged="$CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG:$CI_COMMIT_SHA"
       image_latest="$CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG:latest"
-      podman --remote tag  $image_tagged $image_latest
+      # pull only if needed, in case prior job ran on another CI runner
+      {
+        podman --remote tag  $image_tagged $image_latest
+      } || {
+        podman --remote pull $image_tagged  &&
+        podman --remote tag  $image_tagged $image_latest
+      }
       podman --remote push $image_latest
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
