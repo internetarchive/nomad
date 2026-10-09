@@ -1,5 +1,5 @@
 # pinned: deno 2.7+ Alpine builds dropped glibc compat that nomad binary needs
-FROM quay.io/denoland/deno:alpine-2.6.0
+FROM denoland/deno:alpine-2.6.0
 
 # add `nomad`
 RUN mkdir -m777 /usr/local/sbin  && \
