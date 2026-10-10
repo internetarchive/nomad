@@ -81,8 +81,8 @@ function prodtest() {
   CI_PROJECT_PATH_SLUG=www-$CI_PROJECT_NAME
   expects 'nomad cluster https://dev.example.com' \
           'deploying to https://www-av.dev.example.com'
-  tags '[["https://www-av.dev.example.com"]]'
-  ctags '[["https://canary-www-av.dev.example.com"]]'
+  tags '[["https://www-av.dev.example.com","stable"]]'
+  ctags '[["https://canary-www-av.dev.example.com","canary"]]'
   slug www-av
 )
 (
@@ -94,8 +94,8 @@ function prodtest() {
   NOMAD_VAR_HOSTNAMES='["av"]'
   expects 'nomad cluster https://dev.example.com' \
           'deploying to https://av.dev.example.com'
-  tags '[["https://av.dev.example.com"]]'
-  ctags '[["https://canary-av.dev.example.com"]]'
+  tags '[["https://av.dev.example.com","stable"]]'
+  ctags '[["https://canary-av.dev.example.com","canary"]]'
   slug www-av
 )
 (
@@ -109,8 +109,8 @@ function prodtest() {
   expects 'nomad cluster https://prod.example.com' \
           'deploying to https://avinfo.prod.example.com' \
           'using nomad production token'
-  tags '[["https://avinfo.prod.example.com"]]'
-  ctags '[["https://canary-avinfo.prod.example.com"]]'
+  tags '[["https://avinfo.prod.example.com","stable"]]'
+  ctags '[["https://canary-avinfo.prod.example.com","canary"]]'
   slug www-av-avinfo
 )
 (
@@ -137,8 +137,8 @@ function prodtest() {
           'deploying to https://av1.dev.example.com'
   # NOTE: subtle -- with multiple names to single port deploy, we expect a list of 3 hostnames
   #       applying to *one* service
-  tags '[["https://av1.dev.example.com","https://av2.dweb.me","https://traceypooh.com"]]'
-  ctags '[["https://canary-av1.dev.example.com","https://canary-av2.dweb.me","https://canary-traceypooh.com"]]'
+  tags '[["https://av1.dev.example.com","https://av2.dweb.me","https://traceypooh.com","stable"]]'
+  ctags '[["https://canary-av1.dev.example.com","https://canary-av2.dweb.me","https://canary-traceypooh.com","canary"]]'
 )
 (
   banner GL to dev, branch, so custom hostname ignored
@@ -161,8 +161,8 @@ function prodtest() {
   expects 'nomad cluster https://prod.example.com' \
           'deploying to https://plausible.prod.example.com' \
           'using nomad production token'
-  tags '[["https://plausible.prod.example.com"]]'
-  ctags '[["https://canary-plausible.prod.example.com"]]'
+  tags '[["https://plausible.prod.example.com","stable"]]'
+  ctags '[["https://canary-plausible.prod.example.com","canary"]]'
 )
 (
   banner GL to prod, custom hostname
@@ -209,8 +209,8 @@ function prodtest() {
           'deploying to https://services-lcp.dev.example.com'
   # NOTE: subtle -- with multiple ports (one thus one service per port), we expect 3 services
   #       eacho with its own hostname
-  tags '[["https://services-lcp.dev.example.com"],[],["https://services-lcp-lsd.dev.example.com"]]'
-  ctags '[["https://canary-services-lcp.dev.example.com"]]'
+  tags '[["https://services-lcp.dev.example.com","stable"],[],["https://services-lcp-lsd.dev.example.com","stable"]]'
+  ctags '[["https://canary-services-lcp.dev.example.com","canary"]]'
 )
 (
   banner GL repo using one TCP-only port and 2+ ports/names, to prod
@@ -225,8 +225,8 @@ function prodtest() {
           'using nomad production token'
   # NOTE: subtle -- with multiple ports (thus one service per port), we expect 2 services
   #       each with its own hostname (the 3rd service is TCP only so gets ignored)
-  tags '[["https://lcp.prod.example.com"],[],["https://lcp-lsd.prod.example.com"]]'
-  ctags '[["https://canary-lcp.prod.example.com"]]'
+  tags '[["https://lcp.prod.example.com","stable"],[],["https://lcp-lsd.prod.example.com","stable"],]'
+  ctags '[["https://canary-lcp.prod.example.com","canary"]]'
 )
 (
   banner GL repo using one TCP-only port and 2+ ports/names
@@ -239,8 +239,8 @@ function prodtest() {
           'deploying to https://services-scribe-c2.dev.example.com'
   # NOTE: subtle -- with multiple ports (one thus one service per port), we'd normally expect 3 services
   #       eacho with its own hostname -- but one is TCP so the middle Service gets an *empty* list of tags.
-  tags '[["https://services-scribe-c2.dev.example.com"],[],["https://services-scribe-c2-reg.dev.example.com"]]'
-  ctags '[["https://canary-services-scribe-c2.dev.example.com"]]'
+  tags '[["https://services-scribe-c2.dev.example.com","stable"],[],["https://services-scribe-c2-reg.dev.example.com","stable"]]'
+  ctags '[["https://canary-services-scribe-c2.dev.example.com","canary"]]'
 )
 (
   banner repo use CI_MAIN_STYLE
@@ -252,8 +252,8 @@ function prodtest() {
   CI_COMMIT_REF_SLUG=ext
   expects 'nomad cluster https://ux-b.example.com' \
           'deploying to https://esm.ext.example.com'
-  tags '[["https://esm.ext.example.com"]]'
-  ctags '[["https://canary-esm.ext.example.com"]]'
+  tags '[["https://esm.ext.example.com","stable"]]'
+  ctags '[["https://canary-esm.ext.example.com","canary"]]'
   slug www-esm
 )
 
