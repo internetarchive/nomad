@@ -246,9 +246,9 @@ job "NOMAD_VAR_SLUG" {
       name = "${var.SLUG}"
       task = "http"
 
-      tags = concat([for HOST in var.HOSTNAMES: "https://${HOST}"],["stable"])
+      tags = [for HOST in var.HOSTNAMES: "https://${HOST}"]
 
-      canary_tags = concat([for HOST in var.HOSTNAMES: "https://canary-${HOST}"],["canary"])
+      canary_tags = [for HOST in var.HOSTNAMES: "https://canary-${HOST}"]
 
       port = "http"
       check {
