@@ -180,7 +180,15 @@ locals {
     {for portnum, portname in local.ports_extra_https: portname => [
       # If the main deploy hostname is `card.example.com`, and a 2nd port is named `backend`,
       # then make its hostname be `card-backend.example.com`
-      "https://${local.host0}-${portname}.${local.host0domain}"
+      "https://${local.host0}-${portname}.${local.host0domain}",
+      "stable"
+    ]},
+    {for portnum, portname in local.ports_extra_tcp: portname => []}
+  )
+  canary_tags = merge(
+    {for portnum, portname in local.ports_extra_https: portname => [
+      "https://canary-${local.host0}-${portname}.${local.host0domain}",
+      "canary"
     ]},
     {for portnum, portname in local.ports_extra_tcp: portname => []}
   )
@@ -246,9 +254,9 @@ job "NOMAD_VAR_SLUG" {
       name = "${var.SLUG}"
       task = "http"
 
-      tags = [for HOST in var.HOSTNAMES: "https://${HOST}"]
+      tags = concat([for HOST in var.HOSTNAMES: "https://${HOST}"], ["stable"])
 
-      canary_tags = [for HOST in var.HOSTNAMES: "https://canary-${HOST}"]
+      canary_tags = concat([for HOST in var.HOSTNAMES: "https://canary-${HOST}"], ["canary"])
 
       port = "http"
       check {
@@ -277,7 +285,7 @@ job "NOMAD_VAR_SLUG" {
         task = var.MULTI_CONTAINER ? service.value : "http"
         # NOTE: Empty tags list if MULTI_CONTAINER (private internal ports like DB)
         tags = var.MULTI_CONTAINER ? [] : local.tags[service.value]
-
+        canary_tags = var.MULTI_CONTAINER ? [] : local.canary_tags[service.value]
         port = "${service.value}"
         check {
           name     = "alive"
